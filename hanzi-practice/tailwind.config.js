@@ -61,9 +61,7 @@ export default {
       },
     },
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-  ],
+  plugins: [],
   safelist: [
     'font-kai',
     'font-song',
