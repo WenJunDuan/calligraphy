@@ -1,25 +1,25 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
-import eslint from 'vite-plugin-eslint'
+import { fileURLToPath, URL } from 'node:url'
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    vue({
-      script: {
-        defineModel: true,
-        propsDestructure: true,
-      },
+    vue(),
+    AutoImport({
+      imports: ['vue', 'pinia', '@vueuse/core'],
+      dts: 'src/auto-imports.d.ts',
     }),
-    eslint({
-      include: ['src/**/*.js', 'src/**/*.vue', 'src/**/*.ts', 'src/**/*.tsx'],
-      cache: false,
+    Components({
+      dirs: ['src/components'],
+      dts: 'src/components.d.ts',
     }),
   ],
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   server: {
@@ -28,7 +28,7 @@ export default defineConfig({
     cors: true,
   },
   build: {
-    target: 'esnext',
+    target: 'es2020',
     outDir: 'dist',
     assetsDir: 'assets',
     minify: 'terser',
