@@ -111,7 +111,7 @@ function navigateTo(path: string) {
 }
 
 .header-container {
-  max-width: 1200px;
+  max-width: 1144px;
   height: 100%;
   margin: 0 auto;
   padding: 0 20px;

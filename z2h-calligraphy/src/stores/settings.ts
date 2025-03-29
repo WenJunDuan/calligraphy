@@ -34,10 +34,10 @@ export const useSettingsStore = defineStore('settings', () => {
     paperSize: 'a4',
     orientation: 'portrait',
     margins: {
-      top: 15,
-      right: 15,
-      bottom: 15,
-      left: 15
+      top: 5,
+      right: 10,
+      bottom: 12,
+      left: 10
     },
     headerFooter: false,
     scale: 100

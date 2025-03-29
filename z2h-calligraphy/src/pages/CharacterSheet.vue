@@ -4,57 +4,60 @@
       
     <div class="sheet-content">  
       <!-- 字帖预览区域 -->  
-      <div class="sheet-preview">  
-        <div class="paper" ref="paperRef">  
-          <template v-if="processedCharacters.length > 0">  
-            <div class="character-grid" :style="gridContainerStyle">  
-              <div   
-                v-for="(item, index) in processedCharacters"   
-                :key="`char-${index}`"  
-                class="character-cell"  
-                :class="{ 'row-first': item.isRowFirst }"  
-                :style="cellStyle"  
-              >  
-                <!-- 顶部拼音，在行首字上显示 -->  
-                <template v-if="showPinyin && item.char !== ' ' && item.isRowFirst">
-                  <div class="pinyin-area">  
-                    <small>{{ getPinyin(item.char) }}</small>  
-                  </div>
-                </template>  
-                  
-                <!-- 中间汉字 -->  
+      <div class="sheet-preview" ref="previewContainerRef">  
+        <!-- Loop through pages -->
+        <div class="page" v-for="(pageCells, pageIndex) in paginatedCells" :key="`page-${pageIndex}`">
+          <div class="paper" :style="paperStyle">  
+            <template v-if="pageCells.length > 0">  
+              <div class="character-grid" :style="gridContainerStyle">  
                 <div   
-                  class="character"  
-                  :style="getCharacterStyle(item)"  
+                  v-for="(item, index) in pageCells"  
+                  :key="`char-${pageIndex}-${index}`"  
+                  class="character-cell"  
+                  :class="{ 'row-first': item.isRowFirst }"  
+                  :style="cellStyle"  
                 >  
-                  {{ item.char }}  
+                  <!-- 顶部拼音，在行首字上显示 -->  
+                  <template v-if="showPinyin && item.char !== ' ' && item.isRowFirst">
+                    <div class="pinyin-area">  
+                      <small>{{ getPinyin(item.char) }}</small>  
+                    </div>
+                  </template>  
+                    
+                  <!-- 中间汉字 -->  
+                  <div   
+                    class="character"  
+                    :style="getCharacterStyle(item)"  
+                  >  
+                    {{ item.char }}  
+                  </div>  
+                    
+                  <!-- 背景网格 -->  
+                  <div   
+                    class="grid-background"  
+                    :class="gridType"  
+                  ></div>  
                 </div>  
-                  
-                <!-- 背景网格 -->  
-                <div   
-                  class="grid-background"  
-                  :class="gridType"  
-                ></div>  
               </div>  
-            </div>  
-          </template>  
-          <template v-else>  
-            <!-- 默认显示空白字帖 -->  
-            <div class="character-grid" :style="gridContainerStyle">  
-              <div   
-                v-for="index in defaultGridCount"   
-                :key="`empty-${index}`"  
-                class="character-cell"  
-                :style="cellStyle"  
-              >  
-                <!-- 背景网格 -->  
+            </template>  
+            <template v-else>  
+              <!-- 默认显示空白字帖 -->  
+              <div class="character-grid" :style="gridContainerStyle">  
                 <div   
-                  class="grid-background"  
-                  :class="gridType"  
-                ></div>  
+                  v-for="index in defaultGridCount"   
+                  :key="`empty-${index}`"  
+                  class="character-cell"  
+                  :style="cellStyle"  
+                >  
+                  <!-- 背景网格 -->  
+                  <div   
+                    class="grid-background"  
+                    :class="gridType"  
+                  ></div>  
+                </div>  
               </div>  
-            </div>  
-          </template>  
+            </template>  
+          </div>  
         </div>  
       </div>  
         
@@ -140,6 +143,7 @@ import { ref, computed, watch, onMounted, CSSProperties } from 'vue'
 import { NButton, NInput, NSelect, NSlider, NSwitch } from 'naive-ui'  
 import AppHeader from '@/components/AppHeader.vue'  
 import { useSheetStore } from '@/stores/sheet'  
+import { useSettingsStore } from '@/stores/settings'
 import { PinyinService } from '@/services/pinyinService'
 import { getGridTypeOptions, GridType } from '@/utils/grid'
 import { printContent, exportAsPDF } from '@/utils/printer'  
@@ -173,7 +177,8 @@ const defaultGridCount = 5 * 10 // 5列10行默认网格
 // === 状态管理 ===
 // 存储引用  
 const sheetStore = useSheetStore()  
-const paperRef = ref(null)  
+const settingsStore = useSettingsStore()
+const previewContainerRef = ref<HTMLElement | null>(null);
   
 // 输入文本  
 const inputText = ref('')  
@@ -195,64 +200,115 @@ const layoutType = ref('grid') // grid, vertical
 const charsPerRow = ref(10) // 每列字符数(每个字重复多少行)  
   
 // === 计算属性 ===
-// 处理后的字符（根据模式处理）  
-const processedCharacters = computed(() => {  
-  if (characters.value.length === 0) return []  
-  
-  const result: Array<{  
-    char: string,       // 字符  
-    charGroup: number,  // 字符组索引
-    isRowFirst: boolean // 是否是行首字
-  }> = [];  
-  
-  // 根据排版方式处理
+// A4 dimensions at 96 DPI (approx)
+const A4_WIDTH_PX = 795;
+const A4_HEIGHT_PX = 1123;
+
+// Computed style for the paper element to mimic A4 with print margins
+const paperStyle = computed((): CSSProperties => {
+  const margins = settingsStore.printSettings.margins;
+  const dpi = 96;
+  const mmToPx = (mm: number) => (mm / 25.4) * dpi;
+
+  return {
+    width: `${A4_WIDTH_PX}px`,
+    height: `${A4_HEIGHT_PX}px`,
+    paddingTop: `${mmToPx(margins.top)}px`,
+    paddingRight: `${mmToPx(margins.right)}px`,
+    paddingBottom: `${mmToPx(margins.bottom)}px`,
+    paddingLeft: `${mmToPx(margins.left)}px`,
+    boxSizing: 'border-box',
+    backgroundColor: 'white',
+    boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)'
+  };
+});
+
+// Cell data structure
+interface CellData {
+  char: string;
+  charGroup: number;
+  isRowFirst: boolean;
+}
+
+// Calculate paginated cells based on 12-row limit
+const paginatedCells = computed((): CellData[][] => {
+  if (characters.value.length === 0) return [[]]; // Return one empty page if no input
+
+  const allCells: CellData[] = [];
+  const inputChars = characters.value;
+
+  // 1. Generate all cells first (similar to previous processedCharacters logic)
   if (layoutType.value === 'vertical') {
-    // 竖排模式 - 首行全是行首字，从左到右
-    // 先添加所有的行首字（第一行）
-    for (let charIndex = 0; charIndex < characters.value.length; charIndex++) {
-      result.push({
-        char: characters.value[charIndex],
-        charGroup: charIndex,
-        isRowFirst: true
-      });
-    }
-    
-    // 然后按列添加剩余的练习格子
-    for (let rowIndex = 1; rowIndex < charsPerRow.value; rowIndex++) {
-      for (let charIndex = 0; charIndex < characters.value.length; charIndex++) {
-        result.push({
-          char: characters.value[charIndex],
-          charGroup: charIndex,
-          isRowFirst: false
-        });
+    // Vertical layout processing
+    for (let charIndex = 0; charIndex < inputChars.length; charIndex++) {
+      for (let rowIndex = 0; rowIndex < charsPerRow.value; rowIndex++) {
+        allCells.push({ char: inputChars[charIndex], charGroup: charIndex, isRowFirst: rowIndex === 0 });
       }
     }
   } else {
-    // 网格模式 - 默认行优先排序
-    for (let i = 0; i < characters.value.length; i++) {
-      const char = characters.value[i];
-        
-      // 为每个字符创建练习格（第一个是首字，其余是描红）
+    // Grid layout processing
+    for (let i = 0; i < inputChars.length; i++) {
+      const char = inputChars[i];
       for (let j = 0; j < charsPerRow.value; j++) {
-        result.push({
-          char,
-          charGroup: i,
-          isRowFirst: j === 0 // 每个字的第一个位置是行首
-        });
+        allCells.push({ char, charGroup: i, isRowFirst: j === 0 });
       }
     }
   }
+
+  // 2. Calculate cells per page based on 12-row limit
+  const dpi = 96;
+  const mmToPx = (mm: number) => (mm / 25.4) * dpi;
+  const margins = settingsStore.printSettings.margins;
+  const availableWidth = A4_WIDTH_PX - mmToPx(margins.left) - mmToPx(margins.right);
   
-  return result;  
-})  
-  
+  let cellsPerPage: number;
+  const maxRowsPerPage = 12;
+
+  if (layoutType.value === 'vertical') {
+    // Vertical layout: Limit by 12 input characters (columns)
+    const maxCharsPerPageVertical = 12; // Treat 12 rows limit as 12 characters vertically
+    cellsPerPage = maxCharsPerPageVertical * charsPerRow.value;
+  } else {
+    // Grid layout: Calculate columns based on available width and gridSize
+    const columnGapValue = 0; // Currently 0 in gridContainerStyle
+    const effectiveCellWidth = gridSize.value + columnGapValue;
+    const colsPerPage = Math.max(1, Math.floor((availableWidth + columnGapValue) / effectiveCellWidth));
+    cellsPerPage = maxRowsPerPage * colsPerPage * charsPerRow.value; // Total cells for 12 rows
+    // Correction: charsPerRow is for vertical repetition, grid layout auto wraps.
+    // Cells per page should be 12 rows * colsPerPage.
+    cellsPerPage = maxRowsPerPage * colsPerPage;
+
+  }
+
+  // 3. Split allCells into pages
+  const pages: CellData[][] = [];
+  for (let i = 0; i < allCells.length; i += cellsPerPage) {
+    pages.push(allCells.slice(i, i + cellsPerPage));
+  }
+
+  // Handle case where no cells are generated (e.g., initial state)
+  if (pages.length === 0 && characters.value.length === 0) {
+      return [[]]; // Return a single empty page structure
+  }
+    
+  // If pages is empty but there should be content, add at least one page structure
+  if (pages.length === 0 && allCells.length > 0) {
+      pages.push(allCells); // Put all cells on the first page if calculation failed somehow
+  } else if (pages.length === 0 && characters.value.length > 0 && allCells.length === 0) {
+       // Case where input exists but cell generation logic failed? Return empty page.
+       return [[]];
+  }
+
+  return pages;
+});
+
 // 计算样式  
 const gridContainerStyle = computed(() => {
   // 基本设置 - 适用于所有布局
   const baseStyle = {
     paddingTop: '20px', // 增加顶部空间，确保拼音显示
-    rowGap: '40px',     // 增加行间距，确保拼音有足够空间
-    columnGap: '16px',  // 增加列间距，提高可读性
+    rowGap: '30px',     // 增加行间距，确保拼音有足够空间
+    columnGap: '0px',  // 增加列间距，提高可读性
   };
   
   if (layoutType.value === 'vertical') {  
@@ -320,11 +376,11 @@ function getPinyin(char: string): string {
   
 // 导出与打印功能  
 function handlePrint() {  
-  if (!paperRef.value) return  
+  if (!previewContainerRef.value) return  
     
   printContent({  
     title: `汉字练习 - ${inputText.value || '空白字帖'}`,  
-    content: paperRef.value,
+    content: previewContainerRef.value,
     callback: () => {  
       console.log('打印完成')  
     }
@@ -332,9 +388,9 @@ function handlePrint() {
 }  
   
 function handleExport() {  
-  if (!paperRef.value) return  
+  if (!previewContainerRef.value) return  
     
-  exportAsPDF(`汉字练习 - ${inputText.value || '空白字帖'}`, paperRef.value)  
+  exportAsPDF(`汉字练习 - ${inputText.value || '空白字帖'}`, previewContainerRef.value)  
 }  
   
 // 加载状态从Store  
@@ -414,9 +470,9 @@ onMounted(() => {
 .sheet-content {  
   display: flex;  
   flex: 1;  
-  padding: 16px;  
+  padding: 12px; /* Reduce padding from 16px */
   gap: 16px;  
-  max-width: 1400px;  
+  max-width: 1144px;  
   margin: 0 auto;  
   width: 100%;  
 }  
@@ -427,19 +483,20 @@ onMounted(() => {
   background-color: #eef1f5;  
   border-radius: 8px;  
   display: flex;  
-  justify-content: center;  
-  align-items: flex-start;  
+  flex-direction: column; /* Stack pages vertically */
+  align-items: center; /* Center pages horizontally */
   overflow: auto;  
+  gap: 20px; /* Space between pages */
 }  
   
+.page { 
+  /* Styles for the page container if needed, e.g., margin */
+}
+  
 .paper {  
-  background-color: white;  
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);  
-  padding: 20px;  
-  width: 100%;  
-  min-height: 800px;  
   display: flex;  
   justify-content: center;  
+  margin: 0 auto; /* Center paper horizontally if preview area is wider */
 }  
   
 .character-grid {  
@@ -558,6 +615,12 @@ onMounted(() => {
   
 /* 打印样式 */
 @media print {  
+  /* Add @page rule to remove margins for native print */
+  @page {
+    margin: 0;
+    size: auto; /* Let browser determine size based on content/settings */
+  }
+
   .app-header, .control-panel {  
     display: none;  
   }  
@@ -570,11 +633,24 @@ onMounted(() => {
     overflow: visible;  
     background-color: white;  
     padding: 0;  
+    display: block; /* Reset flex layout for print */
+    gap: 0;
   }  
     
   .paper {  
     box-shadow: none;  
     min-height: auto;  
-  }  
+    margin: 0; /* Reset margin for print */
+  }
+  
+  .page {
+    page-break-after: always; /* Ensure page breaks between .page elements */
+  }
+
+  /* Force printing background graphics for grid */
+  .character-cell, .grid-background {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact; /* For older Safari/Chrome */
+  }
 }  
 </style>

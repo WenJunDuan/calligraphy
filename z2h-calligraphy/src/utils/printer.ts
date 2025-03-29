@@ -66,41 +66,59 @@ export function printContent(options: PrintOptions = {}) {
       <title>${mergedOptions.title}</title>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <style>
-        @page {
-          size: ${printSettings.paperSize} ${printSettings.orientation};
-          margin: ${printSettings.margins.top}mm ${printSettings.margins.right}mm ${printSettings.margins.bottom}mm ${printSettings.margins.left}mm;
-          ${!printSettings.headerFooter ? 'margin-header: 0; margin-footer: 0;' : ''}
-        }
-        body {
-          margin: 0;
-          padding: 0;
-          font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-        .print-content {
-          width: 100%;
-          overflow: visible;
-        }
-        /* 隐藏不需要打印的元素 */
-        ${mergedOptions.removeSelectors.map(selector => `${selector} { display: none !important; }`).join('\n')}
-        /* 针对汉字字帖的优化 */
-        .character-cell {
-          page-break-inside: avoid;
-          break-inside: avoid;
-        }
-        .character-cell:hover {
-          transform: none !important;
-          box-shadow: none !important;
-        }
-        /* 添加额外的打印样式 */
-        ${mergedOptions.addStyles}
-      </style>
+      <!-- Basic styles will be added below, plus copied stylesheets -->
     </head>
     <body>
       <div class="print-content"></div>
     </body>
     </html>
   `)
+
+  // === Copy stylesheets from main document to iframe ===
+  const head = frameDocument.head
+  if (head) {
+    const styles = document.querySelectorAll('style, link[rel="stylesheet"]')
+    styles.forEach(styleNode => {
+      head.appendChild(styleNode.cloneNode(true))
+    })
+    
+    // Add specific print styles AFTER copying main styles
+    const printSpecificStyle = frameDocument.createElement('style')
+    printSpecificStyle.textContent = `
+      @page {
+        size: ${printSettings.paperSize} ${printSettings.orientation};
+        margin: ${printSettings.margins.top}mm ${printSettings.margins.right}mm ${printSettings.margins.bottom}mm ${printSettings.margins.left}mm;
+        ${!printSettings.headerFooter ? 'margin-header: 0; margin-footer: 0;' : ''}
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        -webkit-print-color-adjust: exact; /* Ensure background graphics print */
+        print-color-adjust: exact;
+      }
+      .print-content {
+        width: 100%;
+        overflow: visible;
+      }
+      /* Hide elements specifically for print */
+      ${mergedOptions.removeSelectors.map(selector => `${selector} { display: none !important; }`).join('\n')}
+      /* Page break avoidance */
+      .character-cell {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      /* Disable hover effects during print */
+      .character-cell:hover {
+        transform: none !important;
+        box-shadow: none !important;
+      }
+      /* Add user-provided extra styles */
+      ${mergedOptions.addStyles}
+    `;
+    head.appendChild(printSpecificStyle);
+  }
+  // === End copying stylesheets ===
+
   frameDocument.close()
   
   // 克隆并添加内容
