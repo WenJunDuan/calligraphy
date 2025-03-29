@@ -150,9 +150,9 @@ const GRID_OPTIONS = getGridTypeOptions() // 从grid.ts工具获取
 
 const FONT_OPTIONS = [
   { label: '楷体', value: '楷体, KaiTi, STKaiti, serif' },
-  { label: '行楷', value: '行楷, Xingkai SC, serif' },
-  { label: '瘦金体', value: '瘦金体, Shoujin Ti, serif' },
+  { label: '行书', value: '行书, Xingkai SC, serif' },
   { label: '隶书', value: '隶书, LiSu, STLiti, serif' },
+  { label: '瘦金体', value: '瘦金体, Shoujin Ti, serif' },
   { label: '田英章楷书', value: '田英章楷书, Tian Yingzhang KaiShu, serif' },
   { label: '吴玉生行书', value: '吴玉生行书, Wu Yushuang Xingshu, serif' }
 ]
@@ -250,7 +250,7 @@ const processedCharacters = computed(() => {
 const gridContainerStyle = computed(() => {
   // 基本设置 - 适用于所有布局
   const baseStyle = {
-    paddingTop: '35px', // 增加顶部空间，确保拼音显示
+    paddingTop: '20px', // 增加顶部空间，确保拼音显示
     rowGap: '40px',     // 增加行间距，确保拼音有足够空间
     columnGap: '16px',  // 增加列间距，提高可读性
   };
