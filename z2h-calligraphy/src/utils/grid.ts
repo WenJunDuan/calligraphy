@@ -1,7 +1,7 @@
 /**
  * 字帖网格类型
  */
-export type GridType = 'tian' | 'mi' | 'hui'
+export type GridType = 'tian' | 'mi' | 'hui' | 'jiu' | 'fang' | 'mitian' | 'si'
 
 /**
  * 网格样式配置
@@ -20,9 +20,9 @@ export interface GridStyleConfig {
  */
 export const defaultGridStyle: GridStyleConfig = {
   size: 64,
-  borderColor: '#dddddd',
-  borderWidth: 1,
-  guideColor: '#f0f0f0',
+  borderColor: '#aaaaaa',
+  borderWidth: 1.5,
+  guideColor: '#cccccc',
   guideWidth: 1,
   backgroundColor: 'white'
 }
@@ -34,13 +34,13 @@ export const defaultGridStyle: GridStyleConfig = {
  */
 export function generateTianGrid(config: Partial<GridStyleConfig> = {}): string {
   const style = { ...defaultGridStyle, ...config }
-  const { size, borderColor, borderWidth, guideColor, guideWidth } = style
+  const { size, borderColor, borderWidth, guideColor, guideWidth, backgroundColor } = style
   
   return `
-    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="0" width="${size}" height="${size}" fill="${style.backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}"/>
-      <line x1="${size / 2}" y1="0" x2="${size / 2}" y2="${size}" stroke="${guideColor}" stroke-width="${guideWidth}" />
-      <line x1="0" y1="${size / 2}" x2="${size}" y2="${size / 2}" stroke="${guideColor}" stroke-width="${guideWidth}" />
+    <svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="100" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}"/>
+      <line x1="50" y1="0" x2="50" y2="100" stroke="${guideColor}" stroke-width="${guideWidth}" />
+      <line x1="0" y1="50" x2="100" y2="50" stroke="${guideColor}" stroke-width="${guideWidth}" />
     </svg>
   `.trim()
 }
@@ -52,15 +52,15 @@ export function generateTianGrid(config: Partial<GridStyleConfig> = {}): string 
  */
 export function generateMiGrid(config: Partial<GridStyleConfig> = {}): string {
   const style = { ...defaultGridStyle, ...config }
-  const { size, borderColor, borderWidth, guideColor, guideWidth } = style
+  const { size, borderColor, borderWidth, guideColor, guideWidth, backgroundColor } = style
   
   return `
-    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="0" width="${size}" height="${size}" fill="${style.backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}"/>
-      <line x1="${size / 2}" y1="0" x2="${size / 2}" y2="${size}" stroke="${guideColor}" stroke-width="${guideWidth}" />
-      <line x1="0" y1="${size / 2}" x2="${size}" y2="${size / 2}" stroke="${guideColor}" stroke-width="${guideWidth}" />
-      <line x1="0" y1="0" x2="${size}" y2="${size}" stroke="${guideColor}" stroke-width="${guideWidth}" />
-      <line x1="${size}" y1="0" x2="0" y2="${size}" stroke="${guideColor}" stroke-width="${guideWidth}" />
+    <svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="100" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}"/>
+      <line x1="50" y1="0" x2="50" y2="100" stroke="${guideColor}" stroke-width="${guideWidth}" />
+      <line x1="0" y1="50" x2="100" y2="50" stroke="${guideColor}" stroke-width="${guideWidth}" />
+      <line x1="0" y1="0" x2="100" y2="100" stroke="${guideColor}" stroke-width="${guideWidth}" />
+      <line x1="100" y1="0" x2="0" y2="100" stroke="${guideColor}" stroke-width="${guideWidth}" />
     </svg>
   `.trim()
 }
@@ -72,29 +72,83 @@ export function generateMiGrid(config: Partial<GridStyleConfig> = {}): string {
  */
 export function generateHuiGrid(config: Partial<GridStyleConfig> = {}): string {
   const style = { ...defaultGridStyle, ...config }
-  const { size, borderColor, borderWidth, guideColor, guideWidth } = style
+  const { size, borderColor, borderWidth, guideColor, guideWidth, backgroundColor } = style
   
   // 回宫格是九宫格结构
-  const cellSize = size / 3
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="100" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}"/>
+      <line x1="33.3" y1="0" x2="33.3" y2="100" stroke="${guideColor}" stroke-width="${guideWidth}" />
+      <line x1="66.6" y1="0" x2="66.6" y2="100" stroke="${guideColor}" stroke-width="${guideWidth}" />
+      <line x1="0" y1="33.3" x2="100" y2="33.3" stroke="${guideColor}" stroke-width="${guideWidth}" />
+      <line x1="0" y1="66.6" x2="100" y2="66.6" stroke="${guideColor}" stroke-width="${guideWidth}" />
+    </svg>
+  `.trim()
+}
+
+/**
+ * 生成九宫格SVG（与回宫格相同）
+ * @param config 网格样式配置
+ * @returns SVG字符串
+ */
+export function generateJiuGrid(config: Partial<GridStyleConfig> = {}): string {
+  return generateHuiGrid(config)
+}
+
+/**
+ * 生成方格SVG
+ * @param config 网格样式配置
+ * @returns SVG字符串
+ */
+export function generateFangGrid(config: Partial<GridStyleConfig> = {}): string {
+  const style = { ...defaultGridStyle, ...config }
+  const { size, borderColor, borderWidth, backgroundColor } = style
   
-  let svg = `
-    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="0" width="${size}" height="${size}" fill="${style.backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}"/>
-  `
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="100" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}"/>
+    </svg>
+  `.trim()
+}
+
+/**
+ * 生成米田格SVG
+ * @param config 网格样式配置
+ * @returns SVG字符串
+ */
+export function generateMiTianGrid(config: Partial<GridStyleConfig> = {}): string {
+  const style = { ...defaultGridStyle, ...config }
+  const { size, borderColor, borderWidth, guideColor, guideWidth, backgroundColor } = style
   
-  // 绘制水平线
-  for (let i = 1; i < 3; i++) {
-    svg += `<line x1="0" y1="${cellSize * i}" x2="${size}" y2="${cellSize * i}" stroke="${guideColor}" stroke-width="${guideWidth}" />`
-  }
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="100" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}"/>
+      <line x1="50" y1="0" x2="50" y2="100" stroke="${guideColor}" stroke-width="${guideWidth}" />
+      <line x1="0" y1="50" x2="100" y2="50" stroke="${guideColor}" stroke-width="${guideWidth}" />
+      <line x1="0" y1="0" x2="100" y2="100" stroke="${guideColor}" stroke-width="${guideWidth}" />
+      <line x1="100" y1="0" x2="0" y2="100" stroke="${guideColor}" stroke-width="${guideWidth}" />
+      <circle cx="50" cy="50" r="30" fill="none" stroke="${guideColor}" stroke-width="${guideWidth}" />
+    </svg>
+  `.trim()
+}
+
+/**
+ * 生成四线格SVG
+ * @param config 网格样式配置
+ * @returns SVG字符串
+ */
+export function generateSiGrid(config: Partial<GridStyleConfig> = {}): string {
+  const style = { ...defaultGridStyle, ...config }
+  const { size, borderColor, guideColor, guideWidth, backgroundColor } = style
   
-  // 绘制垂直线
-  for (let i = 1; i < 3; i++) {
-    svg += `<line x1="${cellSize * i}" y1="0" x2="${cellSize * i}" y2="${size}" stroke="${guideColor}" stroke-width="${guideWidth}" />`
-  }
-  
-  svg += `</svg>`
-  
-  return svg.trim()
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="100" fill="${backgroundColor}" stroke="${backgroundColor}" stroke-width="0"/>
+      <line x1="0" y1="25" x2="100" y2="25" stroke="${guideColor}" stroke-width="${guideWidth}" />
+      <line x1="0" y1="50" x2="100" y2="50" stroke="${borderColor}" stroke-width="${guideWidth * 1.5}" />
+      <line x1="0" y1="75" x2="100" y2="75" stroke="${guideColor}" stroke-width="${guideWidth}" />
+    </svg>
+  `.trim()
 }
 
 /**
@@ -111,6 +165,14 @@ export function generateGrid(type: GridType, config: Partial<GridStyleConfig> = 
       return generateMiGrid(config)
     case 'hui':
       return generateHuiGrid(config)
+    case 'jiu':
+      return generateJiuGrid(config)
+    case 'fang':
+      return generateFangGrid(config)
+    case 'mitian':
+      return generateMiTianGrid(config)
+    case 'si':
+      return generateSiGrid(config)
     default:
       return generateTianGrid(config)
   }
@@ -127,4 +189,20 @@ export function generateGridBackgroundCSS(type: GridType, config: Partial<GridSt
   const encodedSVG = encodeURIComponent(svg)
   
   return `background-image: url("data:image/svg+xml,${encodedSVG}"); background-repeat: no-repeat; background-size: 100% 100%;`
+}
+
+/**
+ * 获取所有支持的网格类型选项
+ * @returns 网格类型选项数组
+ */
+export function getGridTypeOptions(): { label: string; value: GridType }[] {
+  return [
+    { label: '田字格', value: 'tian' },
+    { label: '米字格', value: 'mi' },
+    { label: '回宫格', value: 'hui' },
+    { label: '九宫格', value: 'jiu' },
+    { label: '方格', value: 'fang' },
+    { label: '米田格', value: 'mitian' },
+    { label: '四线格', value: 'si' }
+  ]
 }

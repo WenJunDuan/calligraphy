@@ -1,19 +1,4 @@
-// 获取要显示的字符
-function getDisplayChar(item: {char: string, isRowFirst: boolean}) {
-  // 空白模式下，只显示行首字
-  if (practiceMode.value === 'blank' && !item.isRowFirst) {
-    return '';
-  }
-  // 其他情况正常显示字符
-  return item.char;
-}.section-title {
-  font-size: 16px;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #eee;
-}<template>  
+<template>  
   <div class="sheet-page">  
     <AppHeader />  
       
@@ -27,10 +12,7 @@ function getDisplayChar(item: {char: string, isRowFirst: boolean}) {
                 v-for="(item, index) in processedCharacters"   
                 :key="`char-${index}`"  
                 class="character-cell"  
-                :class="{
-                  'character-reference': item.cellType === 'reference' && !item.isRowFirst,
-                  'row-first': item.isRowFirst
-                }"  
+                :class="{ 'row-first': item.isRowFirst }"  
                 :style="cellStyle"  
               >  
                 <!-- 顶部拼音，在行首字上显示 -->  
@@ -45,7 +27,7 @@ function getDisplayChar(item: {char: string, isRowFirst: boolean}) {
                   class="character"  
                   :style="getCharacterStyle(item)"  
                 >  
-                  {{ getDisplayChar(item) }}  
+                  {{ item.isRowFirst ? item.char : item.char }}  
                 </div>  
                   
                 <!-- 背景网格 -->  
@@ -83,106 +65,66 @@ function getDisplayChar(item: {char: string, isRowFirst: boolean}) {
           <n-button type="primary" class="print-btn" @click="handlePrint">打印</n-button>  
         </div>  
           
-        <n-collapse :default-expanded-names="['basic']">  
-          <n-collapse-item title="基础设置" name="basic">  
-            <n-input  
-              v-model:value="inputText"  
-              type="textarea"  
-              placeholder="输入要练习的文字"  
-              :rows="4"  
-              class="text-input"  
-            />  
-              
-            <div class="setting-item">  
-              <div class="setting-label">练习模式</div>  
-              <n-radio-group v-model:value="practiceMode">  
-                <n-radio-button value="standard">标准</n-radio-button>  
-                <n-radio-button value="trace">描红</n-radio-button>  
-                <n-radio-button value="blank">空白</n-radio-button>  
-              </n-radio-group>  
+        <div class="panel-content">  
+          <n-input  
+            v-model:value="inputText"  
+            type="textarea"  
+            placeholder="输入要练习的文字"  
+            :rows="4"  
+            class="text-input"  
+          />  
+            
+          <div class="setting-item">  
+            <div class="setting-label">练习字数</div>  
+            <n-slider v-model:value="charsPerRow" :min="5" :max="20" />  
+            <div class="setting-value">{{ charsPerRow }}个</div>  
+          </div>  
+            
+          <div class="toggle-group">  
+            <div class="toggle-item">  
+              <span class="toggle-label">显示拼音</span>  
+              <n-switch v-model:value="showPinyin" />  
             </div>  
               
             <div class="toggle-item">  
-              <span class="toggle-label">单字练习模式</span>  
-              <n-switch v-model:value="isSingleCharMode" />  
+              <span class="toggle-label">显示笔画</span>  
+              <n-switch v-model:value="showStrokes" />  
             </div>  
-              
-            <div class="setting-item" v-if="!isSingleCharMode">  
-              <div class="setting-label">重复次数</div>  
-              <n-slider v-model:value="repeatCount" :min="1" :max="10" />  
-              <div class="setting-value">{{ repeatCount }}次</div>  
-            </div>  
-              
-            <div class="setting-item" v-if="isSingleCharMode">  
-              <div class="setting-label">练习字数</div>  
-              <n-slider v-model:value="charsPerRow" :min="5" :max="20" />  
-              <div class="setting-value">{{ charsPerRow }}个</div>  
-            </div>  
-              
-                          <div class="toggle-group">  
-              <div class="toggle-item">  
-                <span class="toggle-label">显示拼音</span>  
-                <n-switch v-model:value="showPinyin" />  
-              </div>  
-                
-              <div class="toggle-item">  
-                <span class="toggle-label">显示笔画</span>  
-                <n-switch v-model:value="showStrokes" />  
-              </div>  
-            </div>    
-          </n-collapse-item>  
+          </div>    
+        
+          <div class="setting-item">  
+            <div class="setting-label">方格类型</div>  
+            <n-select v-model:value="gridType" :options="gridOptions" />  
+          </div>  
             
-          <n-collapse-item title="外观设置" name="appearance">  
-            <div class="setting-item">  
-              <div class="setting-label">中文字体</div>  
-              <n-select v-model:value="fontFamily" :options="fontOptions" />  
-            </div>  
-              
-            <div class="setting-item">  
-              <div class="setting-label">方格类型</div>  
-              <n-select v-model:value="gridType" :options="gridOptions" />  
-            </div>  
-              
-            <div class="setting-item">  
-              <div class="setting-label">排版方式</div>  
-              <n-select v-model:value="layoutType" :options="layoutOptions" />  
-            </div>  
-              
-            <div class="setting-item">  
-              <div class="setting-label">方格大小</div>  
-              <n-slider v-model:value="gridSize" :min="32" :max="80" :step="4" />  
-              <div class="setting-value">{{ gridSize }}px</div>  
-            </div>  
-              
-            <div class="setting-item">  
-              <div class="setting-label">字体大小</div>  
-              <n-slider v-model:value="fontSize" :min="40" :max="100" :step="5" />  
-              <div class="setting-value">{{ fontSize }}%</div>  
-            </div>  
-              
-            <div class="setting-item">  
-              <div class="setting-label">上下位置</div>  
-              <n-slider v-model:value="verticalOffset" :min="-10" :max="10" />  
-              <div class="setting-value">{{ verticalOffset }}px</div>  
-            </div>  
-              
-            <div class="setting-item">  
-              <div class="setting-label">字体颜色</div>  
-              <n-select v-model:value="fontColor" :options="colorOptions" />  
-            </div>  
-              
-            <div class="setting-item">  
-              <div class="setting-label">描红颜色</div>  
-              <n-select v-model:value="strokeColor" :options="colorOptions" />  
-            </div>  
-              
-            <div class="setting-item">  
-              <div class="setting-label">描红透明度</div>  
-              <n-slider v-model:value="strokeOpacity" :min="0" :max="100" />  
-              <div class="setting-value">{{ strokeOpacity }}</div>  
-            </div>  
-          </n-collapse-item>  
-        </n-collapse>  
+          <div class="setting-item">  
+            <div class="setting-label">排版方式</div>  
+            <n-select v-model:value="layoutType" :options="layoutOptions" />  
+          </div>  
+            
+          <div class="setting-item">  
+            <div class="setting-label">方格大小</div>  
+            <n-slider v-model:value="gridSize" :min="32" :max="80" :step="4" />  
+            <div class="setting-value">{{ gridSize }}px</div>  
+          </div>  
+            
+          <div class="setting-item">  
+            <div class="setting-label">字体大小</div>  
+            <n-slider v-model:value="fontSize" :min="40" :max="100" :step="5" />  
+            <div class="setting-value">{{ fontSize }}%</div>  
+          </div>  
+            
+          <div class="setting-item">  
+            <div class="setting-label">描红颜色</div>  
+            <n-select v-model:value="strokeColor" :options="colorOptions" />  
+          </div>  
+            
+          <div class="setting-item">  
+            <div class="setting-label">描红透明度</div>  
+            <n-slider v-model:value="strokeOpacity" :min="0" :max="100" />  
+            <div class="setting-value">{{ strokeOpacity }}</div>  
+          </div>  
+        </div>  
       </div>  
     </div>  
   </div>  
@@ -190,16 +132,15 @@ function getDisplayChar(item: {char: string, isRowFirst: boolean}) {
   
 <script setup lang="ts">  
 import { ref, computed, watch, onMounted } from 'vue'  
-import { NButton, NInput, NSelect, NSlider, NSwitch, NRadioGroup, NRadioButton } from 'naive-ui'  
+import { NButton, NInput, NSelect, NSlider, NSwitch } from 'naive-ui'  
 import AppHeader from '@/components/AppHeader.vue'  
 import { useSheetStore } from '@/stores/sheet'  
-import { useFontsStore } from '@/stores/fonts'  
-import { getPinyinData } from '@/utils/strokeGen'  
+import { PinyinService } from '@/services/pinyinService'
+import { getGridTypeOptions, GridType } from '@/utils/grid'
 import { printContent, exportAsPDF } from '@/utils/printer'  
   
 // 存储引用  
 const sheetStore = useSheetStore()  
-const fontsStore = useFontsStore()  
 const paperRef = ref(null)  
   
 // 默认网格数量（空白时）  
@@ -211,105 +152,70 @@ const characters = computed(() => {
   if (!inputText.value) return []  
   return Array.from(inputText.value.trim())  
 })  
+
+// 字帖设置
+const showPinyin = ref(true)  
+const showStrokes = ref(true)  
+const gridType = ref<GridType>('tian')
+const gridSize = ref(64)  
+const fontSize = ref(80)  
+const fontFamily = ref('楷体, KaiTi, STKaiti, serif') // 固定使用楷体
+const strokeColor = ref('lightgray')  
+const strokeOpacity = ref(10)  
+const layoutType = ref('grid') // grid, vertical  
+const charsPerRow = ref(10) // 每列字符数(每个字重复多少行)  
   
 // 处理后的字符（根据模式处理）  
 const processedCharacters = computed(() => {  
   if (characters.value.length === 0) return []  
-    
-  // 单字练习模式  
-  if (isSingleCharMode.value) {  
-    // 重新构造数据结构 - 每个字符形成一个练习组  
-    const result: Array<{  
-      char: string,                  // 字符  
-      cellType: 'reference' | 'practice',  // 单元格类型：参考字或练习字  
-      charGroup: number,             // 字符组索引
-      isFirstChar: boolean           // 是否是首字(第一行第一列的字)
-    }> = [];  
-      
-    // 为每个输入的字符创建一组练习单元  
-    for (let charIndex = 0; charIndex < characters.value.length; charIndex++) {  
+  
+  const result: Array<{  
+    char: string,       // 字符  
+    charGroup: number,  // 字符组索引
+    isRowFirst: boolean // 是否是行首字
+  }> = [];  
+  
+  // 根据排版方式处理
+  if (layoutType.value === 'vertical') {
+    // 竖排模式 - 按字符组的列优先排序
+    for (let charIndex = 0; charIndex < characters.value.length; charIndex++) {
       const char = characters.value[charIndex];  
-        
-      // 添加此字符的所有练习单元（一个参考 + 多个练习）  
+      
+      // 为每个汉字创建一列练习格
       for (let rowIndex = 0; rowIndex < charsPerRow.value; rowIndex++) {  
         result.push({  
           char,  
-          cellType: rowIndex === 0 ? 'reference' : 'practice', // 第一个是参考字  
-          charGroup: charIndex, // 记录字符组索引
-          isFirstChar: rowIndex === 0 && charIndex === 0 // 只有第一个字符组的第一行是首字
-        });  
-      }  
-    }  
-      
-    return result;  
-  }   
-  // 常规重复模式  
-  else {  
-    const result: Array<{  
-      char: string,  
-      cellType: 'reference' | 'practice',  
-      charGroup: number,
-      isFirstChar: boolean
-    }> = []  
-      
-    let isFirst = true; // 用于标记首字
-      
-    for (let charIndex = 0; charIndex < characters.value.length; charIndex++) {  
-      const char = characters.value[charIndex];  
-      for (let i = 0; i < repeatCount.value; i++) {  
-        result.push({  
-          char,  
-          cellType: 'reference', // 常规模式下所有字符都是参考字  
           charGroup: charIndex,
-          isFirstChar: isFirst // 只有第一个字符是首字
+          isRowFirst: rowIndex === 0 // 每列的第一行是行首
+        });  
+      }
+    }
+  } else {
+    // 网格模式 - 默认行优先排序
+    for (let i = 0; i < characters.value.length; i++) {
+      const char = characters.value[i];
+        
+      // 为每个字符创建练习格
+      for (let j = 0; j < charsPerRow.value; j++) {
+        result.push({
+          char,
+          charGroup: i,
+          isRowFirst: j === 0 // 每个字的第一个位置是行首
         });
-        isFirst = false; // 之后的字符都不是首字
-      }  
-    }  
-      
-    return result  
-  }  
+      }
+    }
+  }
+  
+  return result;  
 })  
   
-// 字帖设置 - 默认开启拼音和笔画  
-const showPinyin = ref(true)  
-const showStrokes = ref(true)  
-const gridType = ref('tian') // tian, mi, hui  
-const gridSize = ref(64)  
-const fontSize = ref(80)  
-const fontFamily = ref('楷体')  
-const strokeColor = ref('lightgray')  
-const strokeOpacity = ref(10)  
-  
-// 新增设置  
-const repeatCount = ref(1)  
-const practiceMode = ref('standard') // standard, trace, blank  
-const layoutType = ref('grid') // grid, horizontal, vertical  
-const isSingleCharMode = ref(true) // 单字练习模式开关  
-const charsPerRow = ref(10) // 每列字符数(每个字重复多少行)  
-  
-// 拼音缓存  
-const pinyinCache = ref<Record<string, string>>({})  
-  
 // 选项  
-const gridOptions = [  
-  { label: '田字格', value: 'tian' },  
-  { label: '米字格', value: 'mi' },  
-  { label: '回宫格', value: 'hui' }  
-]  
+const gridOptions = computed(() => getGridTypeOptions())  
   
 const layoutOptions = [  
   { label: '网格布局', value: 'grid' },  
-  { label: '横排布局', value: 'horizontal' },  
   { label: '竖排布局', value: 'vertical' }  
 ]  
-  
-const fontOptions = computed(() => {  
-  return fontsStore.allFonts.map(font => ({  
-    label: font.name,  
-    value: font.family  
-  }))  
-})  
   
 const colorOptions = [  
   { label: '淡灰', value: 'lightgray' },  
@@ -319,41 +225,26 @@ const colorOptions = [
   { label: '蓝色', value: 'blue' }  
 ]  
   
-  // 计算样式  
+// 计算样式  
 const gridContainerStyle = computed(() => {
   // 基本设置 - 适用于所有布局
   const baseStyle = {
     paddingTop: '35px', // 增加顶部空间，确保拼音显示
     rowGap: '40px',     // 增加行间距，确保拼音有足够空间
-    columnGap: '0',     // 列间无间距
-    alignItems: 'start' // 确保所有行高一致
+    columnGap: '16px',  // 增加列间距，提高可读性
   };
   
-  if (isSingleCharMode.value) {  
-    // 单字练习模式下，使用自适应网格布局  
+  if (layoutType.value === 'vertical') {  
+    // 竖排布局，按列排列
     return {  
       ...baseStyle,
-      display: 'grid',  
-      gridTemplateColumns: `repeat(auto-fill, ${gridSize.value}px)`,  
-      gridAutoRows: `${gridSize.value}px`, // 固定高度
-      justifyContent: 'center',  
-      width: '100%'
-    }  
-  } else if (layoutType.value === 'horizontal') {  
-    return {  
-      ...baseStyle,
-      display: 'flex',  
-      flexWrap: 'wrap',  
+      display: 'grid',
+      gridTemplateColumns: `repeat(${characters.value.length || 1}, ${gridSize.value}px)`,
+      gridTemplateRows: `repeat(${charsPerRow.value}, ${gridSize.value}px)`,
       justifyContent: 'center'
     }  
-  } else if (layoutType.value === 'vertical') {  
-    return {  
-      ...baseStyle,
-      display: 'flex',  
-      flexDirection: 'column',  
-      alignItems: 'center'
-    }  
-  } else { // grid  
+  } else { // grid (默认)
+    // 网格布局
     return {  
       ...baseStyle,
       display: 'grid',  
@@ -367,7 +258,11 @@ const gridContainerStyle = computed(() => {
 const cellStyle = computed(() => {  
   return {  
     width: `${gridSize.value}px`,  
-    height: `${gridSize.value}px`  
+    height: `${gridSize.value}px`,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative'
   }  
 })  
   
@@ -375,56 +270,31 @@ const characterStyle = computed(() => {
   return {  
     fontFamily: fontFamily.value,  
     fontSize: `${fontSize.value * gridSize.value / 100}px`,  
-    color: fontColor.value  
+    color: 'black', // 将颜色固定为黑色
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)'
   }  
 })  
   
-// 获取字符样式（支持不同练习模式）  
-function getCharacterStyle(item: {char: string, cellType: 'reference' | 'practice', isRowFirst: boolean}) {  
+// 获取字符样式
+function getCharacterStyle(item: {char: string, isRowFirst: boolean}) {  
   const style = { ...characterStyle.value }  
     
-  // 行首字始终使用正常样式
-  if (item.isRowFirst) {
-    return style;
-  }
-    
-  // 非行首字的处理逻辑
-  if (practiceMode.value === 'trace') {  
-    // 描红模式 - 使字符半透明
-    style.opacity = '0.3'  
-    style.color = strokeColor.value  
-  } else if (practiceMode.value === 'blank') {
-    // 空白模式下非行首字不显示
-    style.opacity = '0'
-  } else if (item.cellType === 'practice') {  
-    // 标准模式下的练习字
-    style.opacity = '0.3'  
+  // 非行首字使用描红样式
+  if (!item.isRowFirst) {  
+    style.opacity = (strokeOpacity.value / 100).toString()
     style.color = strokeColor.value  
   }  
     
   return style  
 }  
   
-// 获取拼音  
+// 获取拼音 - 使用服务类
 function getPinyin(char: string): string {  
-  // 检查缓存  
-  if (pinyinCache.value[char]) {  
-    return pinyinCache.value[char]  
-  }  
-    
-  try {  
-    // 使用统一工具获取拼音  
-    const pinyinData = getPinyinData(char)  
-    const pinyin = pinyinData?.pinyinWithTone || ''  
-      
-    // 存入缓存  
-    pinyinCache.value[char] = pinyin  
-      
-    return pinyin  
-  } catch (error) {  
-    console.error(`获取"${char}"的拼音失败:`, error)  
-    return ''  
-  }  
+  const data = PinyinService.getPinyinData(char);
+  return data ? data.pinyinWithTone : '';
 }  
   
 // 导出与打印功能  
@@ -433,10 +303,10 @@ function handlePrint() {
     
   printContent({  
     title: `汉字练习 - ${inputText.value || '空白字帖'}`,  
-    content: paperRef.value,  
+    content: paperRef.value,
     callback: () => {  
       console.log('打印完成')  
-    }  
+    }
   })  
 }  
   
@@ -446,26 +316,20 @@ function handleExport() {
   exportAsPDF(`汉字练习 - ${inputText.value || '空白字帖'}`, paperRef.value)  
 }  
   
-  // 加载状态从Store  
+// 加载状态从Store  
 function loadFromStore() {  
   const settings = sheetStore.settings  
     
   // 只有当store中有值时才加载  
   if (settings) {  
-    gridType.value = settings.gridType || 'tian'  
-    fontFamily.value = settings.fontFamily || '楷体'  
+    gridType.value = settings.gridType as GridType || 'tian'  
     gridSize.value = settings.gridSize || 64  
     fontSize.value = settings.fontSize || 80  
     strokeColor.value = settings.guideColor || 'lightgray'  
     strokeOpacity.value = settings.guideOpacity || 10  
     showPinyin.value = settings.showPinyin !== undefined ? settings.showPinyin : true  
     showStrokes.value = settings.showGuides !== undefined ? settings.showGuides : true  
-      
-    // 新增设置  
-    repeatCount.value = settings.repeatCount || 1  
-    practiceMode.value = settings.practiceMode || 'standard'  
-    layoutType.value = settings.layoutType || 'grid'  
-    isSingleCharMode.value = settings.isSingleCharMode !== undefined ? settings.isSingleCharMode : true  
+    layoutType.value = settings.layoutType === 'horizontal' ? 'grid' : settings.layoutType || 'grid'
     charsPerRow.value = settings.charsPerRow || 10  
   }  
     
@@ -475,31 +339,29 @@ function loadFromStore() {
   }  
 }  
   
-  // 保存状态到Store  
+// 保存状态到Store  
 watch([  
-  gridType, fontFamily, gridSize, fontSize, strokeColor,   
+  gridType, gridSize, fontSize, strokeColor,   
   strokeOpacity, showPinyin, showStrokes,  
-  repeatCount, practiceMode, layoutType, isSingleCharMode, charsPerRow  
+  layoutType, charsPerRow  
 ], () => {  
   sheetStore.updateSettings({  
     gridType: gridType.value,  
     fontFamily: fontFamily.value,  
     gridSize: gridSize.value,  
     fontSize: fontSize.value,  
+    fontColor: 'black', // 固定黑色
     guideColor: strokeColor.value,  
     guideOpacity: strokeOpacity.value,  
-    showReference: showPinyin.value,  
-    showGuides: showStrokes.value,  
+    verticalOffset: 0, // 固定为0
     showPinyin: showPinyin.value,  
+    showGuides: showStrokes.value,  
     withTone: true,  
     pinyinFontSize: 40,  
     pinyinColor: '#666666',  
-    // 新增设置  
-    repeatCount: repeatCount.value,  
-    practiceMode: practiceMode.value,  
     layoutType: layoutType.value,  
-    isSingleCharMode: isSingleCharMode.value,  
-    charsPerRow: charsPerRow.value  
+    charsPerRow: charsPerRow.value,
+    isSingleCharMode: true // 固定为单字练习模式
   })  
 })  
   
@@ -510,19 +372,12 @@ watch(inputText, (newText) => {
   }  
 })  
   
-// 预加载笔画数据  
-function preloadStrokeData() {  
-  const commonChars = '的一是在了不和有大这中人上为个';  
-  // 使用统一工具预加载数据  
-  commonChars.split('').forEach(char => {  
-    getPinyinData(char); // 预加载拼音数据  
-  });  
-}  
-  
 // 初始化  
 onMounted(() => {  
   loadFromStore();  
-  preloadStrokeData();  
+  // 预加载常用汉字拼音
+  const commonChars = '的一是在了不和有大这中人上为个所我以要他时来用们生到作地于出就分对成会可主发年动同工也能下过子说产种面而方后多定行学法所民得经十三之进着等部';
+  PinyinService.preloadCommonCharacters(commonChars);
 })  
 </script>  
   
@@ -557,7 +412,7 @@ onMounted(() => {
 .paper {  
   background-color: white;  
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);  
-  padding: 0;  
+  padding: 20px;  
   width: 100%;  
   min-height: 800px;  
   display: flex;  
@@ -565,48 +420,33 @@ onMounted(() => {
 }  
   
 .character-grid {  
-  width: 100%;  
-} 
+  width: 100%;
+}
   
 .character-cell {  
-  position: relative;  
-  display: flex;  
-  justify-content: center;  
-  align-items: center;  
-  margin: 0;  
-  padding: 0;  
-  border: none;
-  padding-top: 10px; /* 内容向下移，为拼音留出空间 */
+  position: relative;
 }  
   
-/* 参考字单元格样式强调 - 使用较轻微的加粗 */  
-.character-reference {  
-  font-weight: 300; /* 更轻微的加粗 */  
-}
-
 /* 行首字样式 */
 .row-first {
-  font-weight: 300; /* 统一使用300加粗 */
+  font-weight: 500; /* 加粗 */
   color: #000; /* 强制黑色 */
 }  
   
 .pinyin-area {  
   position: absolute;  
-  top: -30px; /* 拼音区域上移 */  
+  top: -22px; /* 拼音区域上移 */  
   left: 0;  
   width: 100%;  
   text-align: center;  
   color: #666;  
   font-size: 14px;  
-  z-index: 2;  
-  height: 20px; /* 增加高度 */
+  z-index: 2;
 }  
   
 .character {  
-  position: relative;  
   z-index: 1;  
   user-select: none;
-  display: block;
 }  
   
 .grid-background {  
@@ -618,20 +458,47 @@ onMounted(() => {
   z-index: 0;  
 }  
   
+/* 田字格 */
 .grid-background.tian {  
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23aaaaaa' stroke-width='1.5'/%3E%3Cline x1='50' y1='0' x2='50' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='50' x2='100' y2='50' stroke='%23cccccc' stroke-width='1' /%3E%3C/svg%3E");  
   background-size: 100% 100%;  
 }  
   
+/* 米字格 */
 .grid-background.mi {  
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23aaaaaa' stroke-width='1.5'/%3E%3Cline x1='50' y1='0' x2='50' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='50' x2='100' y2='50' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='0' x2='100' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='100' y1='0' x2='0' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3C/svg%3E");  
   background-size: 100% 100%;  
 }  
   
+/* 回宫格 */
 .grid-background.hui {  
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23aaaaaa' stroke-width='1.5'/%3E%3Cline x1='33.3' y1='0' x2='33.3' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='66.6' y1='0' x2='66.6' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='33.3' x2='100' y2='33.3' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='66.6' x2='100' y2='66.6' stroke='%23cccccc' stroke-width='1' /%3E%3C/svg%3E");  
   background-size: 100% 100%;  
-}  
+}
+
+/* 九宫格 */
+.grid-background.jiu {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23aaaaaa' stroke-width='1.5'/%3E%3Cline x1='33.3' y1='0' x2='33.3' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='66.6' y1='0' x2='66.6' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='33.3' x2='100' y2='33.3' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='66.6' x2='100' y2='66.6' stroke='%23cccccc' stroke-width='1' /%3E%3C/svg%3E");
+  background-size: 100% 100%;
+}
+
+/* 方格 */
+.grid-background.fang {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23aaaaaa' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-size: 100% 100%;
+}
+
+/* 米田格 */
+.grid-background.mitian {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23aaaaaa' stroke-width='1.5'/%3E%3Cline x1='50' y1='0' x2='50' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='50' x2='100' y2='50' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='0' x2='100' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='100' y1='0' x2='0' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Ccircle cx='50' cy='50' r='30' fill='none' stroke='%23cccccc' stroke-width='1' /%3E%3C/svg%3E");
+  background-size: 100% 100%;
+}
+
+/* 四线格 */
+.grid-background.si {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='white' stroke-width='0'/%3E%3Cline x1='0' y1='25' x2='100' y2='25' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='50' x2='100' y2='50' stroke='%23aaaaaa' stroke-width='1.5' /%3E%3Cline x1='0' y1='75' x2='100' y2='75' stroke='%23cccccc' stroke-width='1' /%3E%3C/svg%3E");
+  background-size: 100% 100%;
+}
   
 .control-panel {  
   width: 300px;  
@@ -651,12 +518,12 @@ onMounted(() => {
 .export-btn, .print-btn {  
   flex: 1;  
 }  
-  
-.panel-section {  
-  display: flex;  
-  flex-direction: column;  
-  gap: 16px;  
-}  
+
+.panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
   
 .text-input {  
   width: 100%;  
@@ -667,7 +534,7 @@ onMounted(() => {
   display: flex;  
   flex-direction: column;  
   gap: 12px;  
-  margin-top: 16px;  
+  margin-bottom: 16px;  
 }  
   
 .toggle-item {  
@@ -719,4 +586,3 @@ onMounted(() => {
   }  
 }  
 </style>
-vue-router.mjs:3618 ReferenceError: fontColor is not defined at loadFromStore (CharacterSheet.vue?t=1743241687746:210:9) at CharacterSheet.vue?t=1743241687746:273:7，1.1.所有练习模式下，首字都不显示，描红文字也不显示；2.字体颜色功能应该删掉，因为该功能是控制首字颜色显示，
