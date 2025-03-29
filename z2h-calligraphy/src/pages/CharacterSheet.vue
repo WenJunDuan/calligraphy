@@ -131,7 +131,7 @@
 </template>  
   
 <script setup lang="ts">  
-import { ref, computed, watch, onMounted } from 'vue'  
+import { ref, computed, watch, onMounted, CSSProperties } from 'vue'  
 import { NButton, NInput, NSelect, NSlider, NSwitch } from 'naive-ui'  
 import AppHeader from '@/components/AppHeader.vue'  
 import { useSheetStore } from '@/stores/sheet'  
@@ -264,7 +264,7 @@ const gridContainerStyle = computed(() => {
   }  
 })  
   
-const cellStyle = computed(() => {  
+const cellStyle = computed((): CSSProperties => {  
   return {  
     width: `${gridSize.value}px`,  
     height: `${gridSize.value}px`,
@@ -272,11 +272,12 @@ const cellStyle = computed(() => {
   }  
 })  
   
-const characterStyle = computed(() => {  
+const characterStyle = computed((): CSSProperties => {  
   return {  
     fontFamily: fontFamily.value,  
     fontSize: `${fontSize.value * gridSize.value / 100}px`,  
     color: 'black', // 将颜色固定为黑色
+    opacity: 1, // Add default opacity
     position: 'absolute',
     top: '50%',
     left: '50%',
@@ -287,11 +288,11 @@ const characterStyle = computed(() => {
 // === 方法 ===
 // 获取字符样式
 function getCharacterStyle(item: {char: string, isRowFirst: boolean}) {  
-  const style = { ...characterStyle.value }  
+  const style: CSSProperties = { ...characterStyle.value }  
     
   // 非行首字使用描红样式
   if (!item.isRowFirst) {  
-    style.opacity = (strokeOpacity.value / 100).toString()
+    style.opacity = strokeOpacity.value / 100 // Assign number, not string
     style.color = strokeColor.value  
   }  
     
@@ -559,22 +560,31 @@ onMounted(() => {
   color: #333;  
 }  
   
-.setting-item {  
-  margin-bottom: 16px;  
-}  
-  
-.setting-label {  
+.setting-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.setting-label {
+  flex: 0 0 70px;
+  margin-bottom: 0;
   font-size: 14px;  
   color: #666;  
-  margin-bottom: 8px;  
-}  
-  
-.setting-value {  
-  text-align: right;  
+}
+
+.setting-item .n-slider {
+  flex: 1 1 auto;
+}
+
+.setting-value {
+  flex: 0 0 50px;
+  text-align: right;
+  margin-top: 0;
   font-size: 12px;  
   color: #999;  
-  margin-top: 4px;  
-}  
+}
   
 /* 打印样式 */
 @media print {  
