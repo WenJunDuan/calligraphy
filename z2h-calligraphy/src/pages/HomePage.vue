@@ -1,189 +1,267 @@
 <template>
-    <div class="home-page">
-      <header class="header">
-        <div class="container mx-auto px-4 flex items-center justify-between h-16">
-          <div class="logo">Z2H学帖</div>
-          <nav class="flex items-center space-x-6">
-            <a href="#" class="nav-link">语文字帖</a>
-            <a href="#" class="nav-link">英文字帖</a>
-            <a href="#" class="nav-link">控笔练习</a>
-            <a href="#" class="favorites-link">
-              <n-icon size="18" class="text-pink-500">
-                <HeartOutline />
-              </n-icon>
-              <span>收藏</span>
-            </a>
-          </nav>
+  <div class="home-page">
+    <header class="header">
+      <div class="header-container">
+        <div class="logo">Z2H学帖</div>
+        <nav class="nav">
+          <a href="chinese/character" class="nav-item">语文字帖</a>
+          <a href="#" class="nav-item">控笔练习</a>
+        </nav>
+      </div>
+    </header>
+    
+    <main>
+      <div class="hero">
+        <div class="logo-animation">
+          <img src="@/assets/vue.svg" alt="Z2H学帖" class="logo-image" />
         </div>
-      </header>
+        
+        <div class="slogan">
+          <p class="slogan-text">用正确的方法刻到最练习</p>
+          <p class="sub-slogan">每个人都能写出一手漂亮的字</p>
+        </div>
+        
+        <div class="cta-button">
+          <n-button type="primary" size="large" @click="navigateToSheet">
+            开始生成
+          </n-button>
+        </div>
+      </div>
       
-      <main>
-        <div class="hero">
-          <div class="container mx-auto px-4 py-16 text-center">
-            <div class="logo-animation mb-8">
-              <img src="@/assets/vue.svg" alt="Z2H学帖" class="inline-block animate-float" />
-            </div>
-            <h1 class="text-3xl font-bold mb-4">用正确的方法刻到最练习</h1>
-            <p class="text-xl mb-8">每个人都能写出一手漂亮的字</p>
-            <n-button type="primary" size="large" class="start-button" @click="navigateToSheet">
-              开始生成
-            </n-button>
+      <div class="feature-grid">
+        <!-- 语文·汉字字帖 -->
+        <div class="feature-card" @click="navigateTo('/chinese/character')">
+          <div class="card-content">
+            <div class="card-title">语文 · 汉字字帖</div>
+            <div class="card-description">对每个汉字笔顺标准，加强对汉字笔顺的记忆，加深串记忆</div>
           </div>
         </div>
         
-        <div class="features bg-white py-16">
-          <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <!-- 汉字字帖 -->
-              <div class="feature-card" @click="navigateTo('/chinese/character')">
-                <div class="card-header">
-                  <h3>语文 · 汉字字帖</h3>
-                  <p>对每个汉字笔顺标准，加强对汉字笔顺的记忆，加深串记忆</p>
-                </div>
-              </div>
-              
-              <!-- 词语字帖 -->
-              <div class="feature-card" @click="navigateTo('/chinese/word')">
-                <div class="card-header">
-                  <h3>语文 · 词语字帖</h3>
-                  <p>练习词语的书写能力，提高语言表达能力和词语运用</p>
-                </div>
-              </div>
-              
-              <!-- 诗词字帖 -->
-              <div class="feature-card" @click="navigateTo('/chinese/poem')">
-                <div class="card-header">
-                  <h3>语文 · 诗词字帖</h3>
-                  <p>练习时同时掌握诗词内容，提升书写能力的同时积累文学知识</p>
-                </div>
-              </div>
-              
-              <!-- 笔画字帖 -->
-              <div class="feature-card" @click="navigateTo('/chinese/stroke')">
-                <div class="card-header">
-                  <h3>语文 · 笔画字帖</h3>
-                  <p>练习书写时的笔画练习，掌握汉字的基本书写单元和规则</p>
-                </div>
-              </div>
-              
-              <!-- 拼音字帖 -->
-              <div class="feature-card" @click="navigateTo('/chinese/pinyin')">
-                <div class="card-header">
-                  <h3>语文 · 拼音字帖</h3>
-                  <p>练习拼音的书写，掌握汉字的读音和正确的拼写方法</p>
-                </div>
-              </div>
-              
-              <!-- 控笔练习 -->
-              <div class="feature-card" @click="navigateTo('/practice')">
-                <div class="card-header">
-                  <h3>控笔练习</h3>
-                  <p>提供多种图形的控笔练习，训练用户的手部稳定性和控笔能力</p>
-                </div>
-              </div>
-            </div>
+        <!-- 语文·字母字帖 -->
+        <div class="feature-card" @click="navigateTo('/chinese/word')">
+          <div class="card-content">
+            <div class="card-title">语文 · 字母字帖</div>
+            <div class="card-description">对每个小学英文字母练习，加强对英文字母的记忆</div>
           </div>
         </div>
-      </main>
-      
-      <footer class="bg-gray-100 py-6">
-        <div class="container mx-auto px-4 text-center text-gray-600 text-sm">
-          <p>Z2H = Zero to Hero</p>
-          <p>Copyright © 2024 Z2H.CN</p>
+        
+        <!-- 语文·词语字帖 -->
+        <div class="feature-card" @click="navigateTo('/chinese/pinyin')">
+          <div class="card-content">
+            <div class="card-title">语文 · 拼音字帖</div>
+            <div class="card-description">练习拼音的同时加深对汉语拼音规则的认识</div>
+          </div>
         </div>
-      </footer>
-    </div>
-  </template>
-  
-  <script setup lang="ts">
-  import { NButton, NIcon } from 'naive-ui'
-  import { HeartOutline } from '@vicons/ionicons5'
-  import { useRouter } from 'vue-router'
-  
-  const router = useRouter()
-  
-  // 导航方法
-  function navigateToSheet() {
-    router.push('/chinese/character')
-  }
-  
-  function navigateTo(path: string) {
-    router.push(path)
-  }
-  </script>
-  
-  <style scoped>
-  .home-page {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .header {
-    border-bottom: 1px solid #f0f0f0;
-    background-color: white;
-  }
-  
-  .logo {
-    font-size: 20px;
-    font-weight: 600;
-  }
-  
-  .nav-link {
-    color: #333;
-    padding: 0.5rem;
-  }
-  
-  .favorites-link {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    color: #ff4d8f;
-  }
-  
-  .hero {
-    background-color: #f5f7fa;
-    padding: 2rem 0;
-    flex: 1;
-  }
-  
-  .logo-animation img {
-    width: 240px;
-    height: auto;
-  }
-  
-  .feature-card {
-    background-color: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-  }
-  
-  .feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  }
-  
-  .card-header h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #333;
-  }
-  
-  .card-header p {
-    color: #666;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-  
-  main {
-    flex: 1;
-  }
-  
-  footer {
-    margin-top: auto;
-  }
-  </style>
+        
+        <!-- 语文·笔画字帖 -->
+        <div class="feature-card" @click="navigateTo('/chinese/stroke')">
+          <div class="card-content">
+            <div class="card-title">语文 · 笔画字帖</div>
+            <div class="card-description">提供多种控笔练习，训练手部稳定性和控笔能力</div>
+          </div>
+        </div>
+        
+        <!-- 控笔练习 -->
+        <div class="feature-card" @click="navigateTo('/practice')">
+          <div class="card-content">
+            <div class="card-title">控笔练习</div>
+            <div class="card-description">提供多种图形的控笔练习，训练用户的手部稳定性和控笔能力</div>
+          </div>
+        </div>
+      </div>
+    </main>
+    
+    <footer class="footer">
+      <div class="footer-content">
+        <p>Z2H = Zero to Hero</p>
+        <p>Copyright © 2024 Z2H.CN</p>
+      </div>
+    </footer>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { NButton } from 'naive-ui'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+// 导航方法
+function navigateToSheet() {
+  router.push('/chinese/character')
+}
+
+function navigateTo(path: string) {
+  router.push(path)
+}
+</script>
+
+<style scoped>
+.home-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+}
+
+/* 头部样式 */
+.header {
+  height: 60px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.header-container {
+  max-width: 1200px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.nav {
+  display: flex;
+  gap: 30px;
+}
+
+.nav-item {
+  color: #333;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.nav-item:hover {
+  color: #4361ee;
+}
+
+/* 主区域样式 */
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 英雄区样式 */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 0;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.logo-animation {
+  margin-bottom: 30px;
+}
+
+.logo-image {
+  width: 240px;
+  height: auto;
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+.slogan {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.slogan-text {
+  font-size: 28px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.sub-slogan {
+  font-size: 18px;
+  color: #666;
+}
+
+.cta-button {
+  margin-bottom: 60px;
+}
+
+/* 特色卡片网格 */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 20px;
+  margin-bottom: 60px;
+}
+
+.feature-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  height: 140px;
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.card-content {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.card-description {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* 页脚样式 */
+.footer {
+  padding: 20px 0;
+  border-top: 1px solid #f0f0f0;
+  margin-top: auto;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #999;
+}
+
+.footer-content p {
+  margin: 5px 0;
+}
+</style>
