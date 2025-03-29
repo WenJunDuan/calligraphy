@@ -1,0 +1,52 @@
+[install]
+# 使用Node.js兼容模式
+node-compatibility = true
+
+# 指定缓存目录
+cache = "./node_modules/.cache/bun"
+
+# 设置为不同步锁文件
+lockfile = true
+
+# 更精确的版本解析
+exact = true
+
+[build]
+# 定义入口文件
+entrypoints = ["./src/main.ts"]
+
+# 目标环境
+target = "browser"
+
+# 压缩设置
+minify = true
+
+# 输出目录
+outdir = "./dist"
+
+[dev]
+# 开发服务器端口
+port = 3000
+
+# 自动打开浏览器
+open = true
+
+# 启用HMR
+hot = true
+
+[test]
+# 测试文件模式
+patterns = ["**/*.test.ts", "**/*.spec.ts"]
+
+# 是否使用浏览器环境
+browser = true
+
+# 是否监听文件变化
+watch = true
+
+[runtime]
+# 启用日志着色
+logColors = true
+
+# 严格模式
+strict = true
