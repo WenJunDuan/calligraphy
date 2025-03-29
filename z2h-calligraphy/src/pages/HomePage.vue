@@ -21,7 +21,7 @@
         <div class="hero">
           <div class="container mx-auto px-4 py-16 text-center">
             <div class="logo-animation mb-8">
-              <img src="@/assets/images/z2h-logo-large.svg" alt="Z2H学帖" class="inline-block animate-float" />
+              <img src="@/assets/vue.svg" alt="Z2H学帖" class="inline-block animate-float" />
             </div>
             <h1 class="text-3xl font-bold mb-4">用正确的方法刻到最练习</h1>
             <p class="text-xl mb-8">每个人都能写出一手漂亮的字</p>
