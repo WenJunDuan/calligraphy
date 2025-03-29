@@ -27,7 +27,7 @@
                   class="character"  
                   :style="getCharacterStyle(item)"  
                 >  
-                  {{ item.isRowFirst ? item.char : item.char }}  
+                  {{ item.char }}  
                 </div>  
                   
                 <!-- 背景网格 -->  
@@ -73,12 +73,45 @@
             :rows="4"  
             class="text-input"  
           />  
+          
+          <div class="setting-item">  
+            <div class="setting-label">方格大小</div>  
+            <n-slider v-model:value="gridSize" :min="32" :max="80" :step="4" />  
+            <div class="setting-value">{{ gridSize }}px</div>  
+          </div>
+            
+          <div class="setting-item">  
+            <div class="setting-label">字体大小</div>  
+            <n-slider v-model:value="fontSize" :min="40" :max="100" :step="5" />  
+            <div class="setting-value">{{ fontSize }}%</div>  
+          </div>
             
           <div class="setting-item">  
             <div class="setting-label">练习字数</div>  
             <n-slider v-model:value="charsPerRow" :min="5" :max="20" />  
             <div class="setting-value">{{ charsPerRow }}个</div>  
           </div>  
+          
+          <div class="setting-item">  
+            <div class="setting-label">方格类型</div>  
+            <n-select v-model:value="gridType" :options="GRID_OPTIONS" />  
+          </div>  
+            
+          <div class="setting-item">  
+            <div class="setting-label">排版方式</div>  
+            <n-select v-model:value="layoutType" :options="LAYOUT_OPTIONS" />  
+          </div>  
+            
+          <div class="setting-item">  
+            <div class="setting-label">描红颜色</div>  
+            <n-select v-model:value="strokeColor" :options="COLOR_OPTIONS" />  
+          </div>  
+            
+          <div class="setting-item">  
+            <div class="setting-label">描红透明度</div>  
+            <n-slider v-model:value="strokeOpacity" :min="0" :max="100" />  
+            <div class="setting-value">{{ strokeOpacity }}</div>  
+          </div>
             
           <div class="toggle-group">  
             <div class="toggle-item">  
@@ -91,39 +124,6 @@
               <n-switch v-model:value="showStrokes" />  
             </div>  
           </div>    
-        
-          <div class="setting-item">  
-            <div class="setting-label">方格类型</div>  
-            <n-select v-model:value="gridType" :options="gridOptions" />  
-          </div>  
-            
-          <div class="setting-item">  
-            <div class="setting-label">排版方式</div>  
-            <n-select v-model:value="layoutType" :options="layoutOptions" />  
-          </div>  
-            
-          <div class="setting-item">  
-            <div class="setting-label">方格大小</div>  
-            <n-slider v-model:value="gridSize" :min="32" :max="80" :step="4" />  
-            <div class="setting-value">{{ gridSize }}px</div>  
-          </div>  
-            
-          <div class="setting-item">  
-            <div class="setting-label">字体大小</div>  
-            <n-slider v-model:value="fontSize" :min="40" :max="100" :step="5" />  
-            <div class="setting-value">{{ fontSize }}%</div>  
-          </div>  
-            
-          <div class="setting-item">  
-            <div class="setting-label">描红颜色</div>  
-            <n-select v-model:value="strokeColor" :options="colorOptions" />  
-          </div>  
-            
-          <div class="setting-item">  
-            <div class="setting-label">描红透明度</div>  
-            <n-slider v-model:value="strokeOpacity" :min="0" :max="100" />  
-            <div class="setting-value">{{ strokeOpacity }}</div>  
-          </div>  
         </div>  
       </div>  
     </div>  
@@ -138,13 +138,29 @@ import { useSheetStore } from '@/stores/sheet'
 import { PinyinService } from '@/services/pinyinService'
 import { getGridTypeOptions, GridType } from '@/utils/grid'
 import { printContent, exportAsPDF } from '@/utils/printer'  
+
+// === 常量定义 ===
+// 下拉选项常量
+const GRID_OPTIONS = getGridTypeOptions() // 从grid.ts工具获取
+const LAYOUT_OPTIONS = [  
+  { label: '网格布局', value: 'grid' },  
+  { label: '竖排布局', value: 'vertical' }  
+]  
+const COLOR_OPTIONS = [  
+  { label: '淡灰', value: 'lightgray' },  
+  { label: '中灰', value: 'gray' },  
+  { label: '黑色', value: 'black' },  
+  { label: '红色', value: 'red' },  
+  { label: '蓝色', value: 'blue' }  
+]
+
+// 默认网格数量（空白时）  
+const defaultGridCount = 5 * 10 // 5列10行默认网格  
   
+// === 状态管理 ===
 // 存储引用  
 const sheetStore = useSheetStore()  
 const paperRef = ref(null)  
-  
-// 默认网格数量（空白时）  
-const defaultGridCount = 5 * 10 // 5列10行默认网格  
   
 // 输入文本  
 const inputText = ref('')  
@@ -165,6 +181,7 @@ const strokeOpacity = ref(10)
 const layoutType = ref('grid') // grid, vertical  
 const charsPerRow = ref(10) // 每列字符数(每个字重复多少行)  
   
+// === 计算属性 ===
 // 处理后的字符（根据模式处理）  
 const processedCharacters = computed(() => {  
   if (characters.value.length === 0) return []  
@@ -177,17 +194,24 @@ const processedCharacters = computed(() => {
   
   // 根据排版方式处理
   if (layoutType.value === 'vertical') {
-    // 竖排模式 - 按字符组的列优先排序
+    // 竖排模式 - 首行全是行首字，从左到右
+    // 先添加所有的行首字（第一行）
     for (let charIndex = 0; charIndex < characters.value.length; charIndex++) {
-      const char = characters.value[charIndex];  
-      
-      // 为每个汉字创建一列练习格
-      for (let rowIndex = 0; rowIndex < charsPerRow.value; rowIndex++) {  
-        result.push({  
-          char,  
+      result.push({
+        char: characters.value[charIndex],
+        charGroup: charIndex,
+        isRowFirst: true
+      });
+    }
+    
+    // 然后按列添加剩余的练习格子
+    for (let rowIndex = 1; rowIndex < charsPerRow.value; rowIndex++) {
+      for (let charIndex = 0; charIndex < characters.value.length; charIndex++) {
+        result.push({
+          char: characters.value[charIndex],
           charGroup: charIndex,
-          isRowFirst: rowIndex === 0 // 每列的第一行是行首
-        });  
+          isRowFirst: false
+        });
       }
     }
   } else {
@@ -195,7 +219,7 @@ const processedCharacters = computed(() => {
     for (let i = 0; i < characters.value.length; i++) {
       const char = characters.value[i];
         
-      // 为每个字符创建练习格
+      // 为每个字符创建练习格（第一个是首字，其余是描红）
       for (let j = 0; j < charsPerRow.value; j++) {
         result.push({
           char,
@@ -209,22 +233,6 @@ const processedCharacters = computed(() => {
   return result;  
 })  
   
-// 选项  
-const gridOptions = computed(() => getGridTypeOptions())  
-  
-const layoutOptions = [  
-  { label: '网格布局', value: 'grid' },  
-  { label: '竖排布局', value: 'vertical' }  
-]  
-  
-const colorOptions = [  
-  { label: '淡灰', value: 'lightgray' },  
-  { label: '中灰', value: 'gray' },  
-  { label: '黑色', value: 'black' },  
-  { label: '红色', value: 'red' },  
-  { label: '蓝色', value: 'blue' }  
-]  
-  
 // 计算样式  
 const gridContainerStyle = computed(() => {
   // 基本设置 - 适用于所有布局
@@ -235,11 +243,12 @@ const gridContainerStyle = computed(() => {
   };
   
   if (layoutType.value === 'vertical') {  
-    // 竖排布局，按列排列
+    // 竖排布局，按列排列，首行是所有行首字
+    const charCount = characters.value.length || 1;
     return {  
       ...baseStyle,
       display: 'grid',
-      gridTemplateColumns: `repeat(${characters.value.length || 1}, ${gridSize.value}px)`,
+      gridTemplateColumns: `repeat(${charCount}, ${gridSize.value}px)`,
       gridTemplateRows: `repeat(${charsPerRow.value}, ${gridSize.value}px)`,
       justifyContent: 'center'
     }  
@@ -259,9 +268,6 @@ const cellStyle = computed(() => {
   return {  
     width: `${gridSize.value}px`,  
     height: `${gridSize.value}px`,
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
     position: 'relative'
   }  
 })  
@@ -278,6 +284,7 @@ const characterStyle = computed(() => {
   }  
 })  
   
+// === 方法 ===
 // 获取字符样式
 function getCharacterStyle(item: {char: string, isRowFirst: boolean}) {  
   const style = { ...characterStyle.value }  
@@ -382,6 +389,7 @@ onMounted(() => {
 </script>  
   
 <style scoped>  
+/* 页面整体布局 */
 .sheet-page {  
   min-height: 100vh;  
   display: flex;  
@@ -399,6 +407,7 @@ onMounted(() => {
   width: 100%;  
 }  
   
+/* 预览区域 */
 .sheet-preview {  
   flex: 1;  
   background-color: #eef1f5;  
@@ -423,6 +432,7 @@ onMounted(() => {
   width: 100%;
 }
   
+/* 字符单元格 */
 .character-cell {  
   position: relative;
 }  
@@ -458,6 +468,7 @@ onMounted(() => {
   z-index: 0;  
 }  
   
+/* 网格背景样式 */
 /* 田字格 */
 .grid-background.tian {  
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23aaaaaa' stroke-width='1.5'/%3E%3Cline x1='50' y1='0' x2='50' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='50' x2='100' y2='50' stroke='%23cccccc' stroke-width='1' /%3E%3C/svg%3E");  
@@ -500,6 +511,7 @@ onMounted(() => {
   background-size: 100% 100%;
 }
   
+/* 控制面板样式 */
 .control-panel {  
   width: 300px;  
   background-color: white;  
@@ -534,7 +546,6 @@ onMounted(() => {
   display: flex;  
   flex-direction: column;  
   gap: 12px;  
-  margin-bottom: 16px;  
 }  
   
 .toggle-item {  
@@ -565,6 +576,7 @@ onMounted(() => {
   margin-top: 4px;  
 }  
   
+/* 打印样式 */
 @media print {  
   .app-header, .control-panel {  
     display: none;  
