@@ -265,17 +265,13 @@ const paginatedCells = computed((): CellData[][] => {
   const maxRowsPerPage = 12;
 
   if (layoutType.value === 'vertical') {
-    // Vertical layout: Limit by 12 input characters (columns)
     const maxCharsPerPageVertical = 12; // Treat 12 rows limit as 12 characters vertically
     cellsPerPage = maxCharsPerPageVertical * charsPerRow.value;
   } else {
-    // Grid layout: Calculate columns based on available width and gridSize
     const columnGapValue = 0; // Currently 0 in gridContainerStyle
     const effectiveCellWidth = gridSize.value + columnGapValue;
     const colsPerPage = Math.max(1, Math.floor((availableWidth + columnGapValue) / effectiveCellWidth));
     cellsPerPage = maxRowsPerPage * colsPerPage * charsPerRow.value; // Total cells for 12 rows
-    // Correction: charsPerRow is for vertical repetition, grid layout auto wraps.
-    // Cells per page should be 12 rows * colsPerPage.
     cellsPerPage = maxRowsPerPage * colsPerPage;
 
   }
