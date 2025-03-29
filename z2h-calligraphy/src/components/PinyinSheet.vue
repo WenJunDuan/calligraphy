@@ -45,7 +45,7 @@
   
   <script setup lang="ts">
   import { ref, computed, onMounted } from 'vue'
-  import { getTextPinyin } from '@/utils/strokeGenCnchar'
+  import { getTextPinyin } from '@/utils/strokeGen'
   
   const props = defineProps({
     text: {

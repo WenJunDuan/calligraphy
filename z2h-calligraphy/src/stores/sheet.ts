@@ -16,6 +16,13 @@ interface SheetSettings {
   withTone: boolean
   pinyinFontSize: number
   pinyinColor: string
+  // 新增设置
+  repeatCount: number
+  practiceMode: string
+  layoutType: string
+  // 单字练习设置
+  isSingleCharMode: boolean
+  charsPerRow: number
 }
 
 export const useSheetStore = defineStore('sheet', () => {
@@ -34,7 +41,14 @@ export const useSheetStore = defineStore('sheet', () => {
     showPinyin: true,
     withTone: true,
     pinyinFontSize: 40,
-    pinyinColor: '#666666'
+    pinyinColor: '#666666',
+    // 新增设置
+    repeatCount: 1,
+    practiceMode: 'standard', // standard, trace, blank
+    layoutType: 'grid', // grid, horizontal, vertical
+    // 单字练习设置
+    isSingleCharMode: true,
+    charsPerRow: 10
   })
 
   // 当前输入的文字
@@ -77,7 +91,12 @@ export const useSheetStore = defineStore('sheet', () => {
       showPinyin: true,
       withTone: true,
       pinyinFontSize: 40,
-      pinyinColor: '#666666'
+      pinyinColor: '#666666',
+      repeatCount: 1,
+      practiceMode: 'standard',
+      layoutType: 'grid',
+      isSingleCharMode: true,
+      charsPerRow: 10
     })
   }
 

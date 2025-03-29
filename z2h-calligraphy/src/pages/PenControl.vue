@@ -275,7 +275,6 @@
     flex: 1;
     background-color: #eef1f5;
     border-radius: 8px;
-    padding: 16px;
     display: flex;
     justify-content: center;
     align-items: flex-start;

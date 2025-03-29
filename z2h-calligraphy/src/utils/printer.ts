@@ -20,7 +20,7 @@ export function printContent(options: PrintOptions = {}) {
     title: document.title,
     content: null,
     addStyles: '',
-    removeSelectors: ['.app-header', '.control-panel', '.n-button', '.panel-section'],
+    removeSelectors: ['.app-header', '.control-panel', '.n-button', '.panel-section', '.n-modal'],
     callback: () => {}
   }
   
@@ -28,7 +28,7 @@ export function printContent(options: PrintOptions = {}) {
   
   // 如果没有指定内容，默认尝试查找预览区域
   if (!mergedOptions.content) {
-    mergedOptions.content = document.querySelector('.sheet-paper')
+    mergedOptions.content = document.querySelector('.paper')
   }
   
   // 如果找不到内容，直接返回
@@ -83,6 +83,15 @@ export function printContent(options: PrintOptions = {}) {
         }
         /* 隐藏不需要打印的元素 */
         ${mergedOptions.removeSelectors.map(selector => `${selector} { display: none !important; }`).join('\n')}
+        /* 针对汉字字帖的优化 */
+        .character-cell {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+        .character-cell:hover {
+          transform: none !important;
+          box-shadow: none !important;
+        }
         /* 添加额外的打印样式 */
         ${mergedOptions.addStyles}
       </style>
@@ -132,11 +141,18 @@ export function printContent(options: PrintOptions = {}) {
 /**
  * 导出为PDF
  * 注意: 这实际上也是调用打印功能，但提示用户保存为PDF
+ * @param title PDF文档标题
+ * @param content 要导出的HTML内容
  */
 export function exportAsPDF(title: string, content: HTMLElement | null = null) {
   printContent({
     title,
     content,
+    addStyles: `
+      @media print {
+        body { -webkit-print-color-adjust: exact; color-adjust: exact; }
+      }
+    `,
     callback: () => {
       console.log('PDF导出成功')
     }
