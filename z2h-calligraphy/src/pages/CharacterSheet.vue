@@ -73,7 +73,7 @@
             :rows="4"  
             class="text-input"  
           />  
-          
+
           <div class="setting-item">  
             <div class="setting-label">方格大小</div>  
             <n-slider v-model:value="gridSize" :min="32" :max="80" :step="4" />  
@@ -90,6 +90,11 @@
             <div class="setting-label">练习字数</div>  
             <n-slider v-model:value="charsPerRow" :min="5" :max="20" />  
             <div class="setting-value">{{ charsPerRow }}个</div>  
+          </div>  
+
+          <div class="setting-item">  
+            <div class="setting-label">字体类型</div>  
+            <n-select v-model:value="fontFamily" :options="FONT_OPTIONS" />  
           </div>  
           
           <div class="setting-item">  
@@ -142,14 +147,22 @@ import { printContent, exportAsPDF } from '@/utils/printer'
 // === 常量定义 ===
 // 下拉选项常量
 const GRID_OPTIONS = getGridTypeOptions() // 从grid.ts工具获取
+
+const FONT_OPTIONS = [
+  { label: '楷体', value: '楷体, KaiTi, STKaiti, serif' },
+  { label: '行楷', value: '行楷, Xingkai SC, serif' },
+  { label: '瘦金体', value: '瘦金体, Shoujin Ti, serif' },
+  { label: '隶书', value: '隶书, LiSu, STLiti, serif' },
+  { label: '田英章楷书', value: '田英章楷书, Tian Yingzhang KaiShu, serif' },
+  { label: '吴玉生行书', value: '吴玉生行书, Wu Yushuang Xingshu, serif' }
+]
+
 const LAYOUT_OPTIONS = [  
   { label: '网格布局', value: 'grid' },  
   { label: '竖排布局', value: 'vertical' }  
 ]  
 const COLOR_OPTIONS = [  
-  { label: '淡灰', value: 'lightgray' },  
   { label: '中灰', value: 'gray' },  
-  { label: '黑色', value: 'black' },  
   { label: '红色', value: 'red' },  
   { label: '蓝色', value: 'blue' }  
 ]
@@ -468,49 +481,6 @@ onMounted(() => {
   height: 100%;  
   z-index: 0;  
 }  
-  
-/* 网格背景样式 */
-/* 田字格 */
-.grid-background.tian {  
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23aaaaaa' stroke-width='1.5'/%3E%3Cline x1='50' y1='0' x2='50' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='50' x2='100' y2='50' stroke='%23cccccc' stroke-width='1' /%3E%3C/svg%3E");  
-  background-size: 100% 100%;  
-}  
-  
-/* 米字格 */
-.grid-background.mi {  
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23aaaaaa' stroke-width='1.5'/%3E%3Cline x1='50' y1='0' x2='50' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='50' x2='100' y2='50' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='0' x2='100' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='100' y1='0' x2='0' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3C/svg%3E");  
-  background-size: 100% 100%;  
-}  
-  
-/* 回宫格 */
-.grid-background.hui {  
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23aaaaaa' stroke-width='1.5'/%3E%3Cline x1='33.3' y1='0' x2='33.3' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='66.6' y1='0' x2='66.6' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='33.3' x2='100' y2='33.3' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='66.6' x2='100' y2='66.6' stroke='%23cccccc' stroke-width='1' /%3E%3C/svg%3E");  
-  background-size: 100% 100%;  
-}
-
-/* 九宫格 */
-.grid-background.jiu {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23aaaaaa' stroke-width='1.5'/%3E%3Cline x1='33.3' y1='0' x2='33.3' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='66.6' y1='0' x2='66.6' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='33.3' x2='100' y2='33.3' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='66.6' x2='100' y2='66.6' stroke='%23cccccc' stroke-width='1' /%3E%3C/svg%3E");
-  background-size: 100% 100%;
-}
-
-/* 方格 */
-.grid-background.fang {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23aaaaaa' stroke-width='1.5'/%3E%3C/svg%3E");
-  background-size: 100% 100%;
-}
-
-/* 米田格 */
-.grid-background.mitian {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23aaaaaa' stroke-width='1.5'/%3E%3Cline x1='50' y1='0' x2='50' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='50' x2='100' y2='50' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='0' x2='100' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='100' y1='0' x2='0' y2='100' stroke='%23cccccc' stroke-width='1' /%3E%3Ccircle cx='50' cy='50' r='30' fill='none' stroke='%23cccccc' stroke-width='1' /%3E%3C/svg%3E");
-  background-size: 100% 100%;
-}
-
-/* 四线格 */
-.grid-background.si {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='white' stroke-width='0'/%3E%3Cline x1='0' y1='25' x2='100' y2='25' stroke='%23cccccc' stroke-width='1' /%3E%3Cline x1='0' y1='50' x2='100' y2='50' stroke='%23aaaaaa' stroke-width='1.5' /%3E%3Cline x1='0' y1='75' x2='100' y2='75' stroke='%23cccccc' stroke-width='1' /%3E%3C/svg%3E");
-  background-size: 100% 100%;
-}
   
 /* 控制面板样式 */
 .control-panel {  
