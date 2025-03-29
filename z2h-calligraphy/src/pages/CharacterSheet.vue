@@ -483,11 +483,7 @@ onMounted(() => {
   align-items: center; /* Center pages horizontally */
   overflow: auto;  
   gap: 20px; /* Space between pages */
-}  
-  
-.page { 
-  /* Styles for the page container if needed, e.g., margin */
-}
+} 
   
 .paper {  
   display: flex;  
