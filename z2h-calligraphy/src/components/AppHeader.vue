@@ -1,7 +1,7 @@
 <template>
   <header class="app-header">
     <div class="header-container">
-      <router-link to="/" class="logo">Z2H学帖</router-link>
+      <router-link to="/" class="logo">小神龙字帖</router-link>
       
       <nav class="nav">
         <n-dropdown

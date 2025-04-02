@@ -2,7 +2,7 @@
   <div class="home-page">
     <header class="header">
       <div class="header-container">
-        <div class="logo">Z2H学帖</div>
+        <div class="logo">小神龙字帖</div>
         <nav class="nav">
           <a href="chinese/character" class="nav-item">语文字帖</a>
           <a href="#" class="nav-item">控笔练习</a>
@@ -13,7 +13,7 @@
     <main>
       <div class="hero">
         <div class="logo-animation">
-          <img src="@/assets/vue.svg" alt="Z2H学帖" class="logo-image" />
+          <img src="@/assets/vue.svg" alt="小神龙字帖" class="logo-image" />
         </div>
         
         <div class="slogan">
