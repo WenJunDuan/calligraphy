@@ -37,27 +37,11 @@
           </div>
         </div>
         
-        <!-- 语文·字母字帖 -->
-        <div class="feature-card" @click="navigateTo('/chinese/word')">
-          <div class="card-content">
-            <div class="card-title">语文 · 字母字帖</div>
-            <div class="card-description">对每个小学英文字母练习，加强对英文字母的记忆</div>
-          </div>
-        </div>
-        
-        <!-- 语文·词语字帖 -->
-        <div class="feature-card" @click="navigateTo('/chinese/pinyin')">
-          <div class="card-content">
-            <div class="card-title">语文 · 拼音字帖</div>
-            <div class="card-description">练习拼音的同时加深对汉语拼音规则的认识</div>
-          </div>
-        </div>
-        
-        <!-- 语文·笔画字帖 -->
+        <!-- 诗词·字帖 -->
         <div class="feature-card" @click="navigateTo('/chinese/stroke')">
           <div class="card-content">
-            <div class="card-title">语文 · 笔画字帖</div>
-            <div class="card-description">提供多种控笔练习，训练手部稳定性和控笔能力</div>
+            <div class="card-title">诗词字帖</div>
+            <div class="card-description">提供古诗词练习，方便古代诗词临摹</div>
           </div>
         </div>
         

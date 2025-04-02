@@ -46,18 +46,16 @@ const menus = [
       {
         key: '/chinese/character',
         label: '汉字字帖'
-      },
-      {
-        key: '/chinese/word',
-        label: '词语字帖'
-      },
+      }
+    ]
+  },
+  {
+    key: 'ChinesePoem',
+    label: '诗词字帖',
+    children: [
       {
         key: '/chinese/poem',
         label: '诗词字帖'
-      },
-      {
-        key: '/chinese/stroke',
-        label: '笔画字帖'
       }
     ]
   },
