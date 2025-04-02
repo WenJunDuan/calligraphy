@@ -18,6 +18,7 @@
 .footer {
     padding: 20px 0;
     margin-top: auto;
+    background-color: white;
 }
 
 .footer-content {
