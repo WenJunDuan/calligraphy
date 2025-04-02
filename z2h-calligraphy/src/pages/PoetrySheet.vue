@@ -390,21 +390,6 @@
     z-index: 0;
   }
   
-  .grid-background.tian {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23dddddd' stroke-width='1'/%3E%3Cline x1='50' y1='0' x2='50' y2='100' stroke='%23eeeeee' stroke-width='1' /%3E%3Cline x1='0' y1='50' x2='100' y2='50' stroke='%23eeeeee' stroke-width='1' /%3E%3C/svg%3E");
-    background-size: 100% 100%;
-  }
-  
-  .grid-background.mi {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23dddddd' stroke-width='1'/%3E%3Cline x1='50' y1='0' x2='50' y2='100' stroke='%23eeeeee' stroke-width='1' /%3E%3Cline x1='0' y1='50' x2='100' y2='50' stroke='%23eeeeee' stroke-width='1' /%3E%3Cline x1='0' y1='0' x2='100' y2='100' stroke='%23eeeeee' stroke-width='1' /%3E%3Cline x1='100' y1='0' x2='0' y2='100' stroke='%23eeeeee' stroke-width='1' /%3E%3C/svg%3E");
-    background-size: 100% 100%;
-  }
-  
-  .grid-background.hui {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='100' height='100' fill='white' stroke='%23dddddd' stroke-width='1'/%3E%3Cline x1='33.3' y1='0' x2='33.3' y2='100' stroke='%23eeeeee' stroke-width='1' /%3E%3Cline x1='66.6' y1='0' x2='66.6' y2='100' stroke='%23eeeeee' stroke-width='1' /%3E%3Cline x1='0' y1='33.3' x2='100' y2='33.3' stroke='%23eeeeee' stroke-width='1' /%3E%3Cline x1='0' y1='66.6' x2='100' y2='66.6' stroke='%23eeeeee' stroke-width='1' /%3E%3C/svg%3E");
-    background-size: 100% 100%;
-  }
-  
   .empty-state {
     display: flex;
     justify-content: center;

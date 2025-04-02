@@ -135,14 +135,16 @@
           </div>    
         </div>  
       </div>  
-    </div>  
+    </div> 
+    <AppFooter />
   </div>  
 </template>  
   
 <script setup lang="ts">  
 import { ref, computed, watch, onMounted, CSSProperties } from 'vue'  
 import { NButton, NInput, NSelect, NSlider, NSwitch } from 'naive-ui'  
-import AppHeader from '@/components/AppHeader.vue'  
+import AppHeader from '@/components/AppHeader.vue' 
+import AppFooter from '@/components/AppFooter.vue'  
 import { useSheetStore } from '@/stores/sheet'  
 import { useSettingsStore } from '@/stores/settings'
 import { PinyinService } from '@/services/pinyinService'
@@ -220,7 +222,7 @@ watch(layoutType, (newValue) => {
 // === 计算属性 ===
 // A4 dimensions at 96 DPI (approx)
 const A4_WIDTH_PX = 795;
-const A4_HEIGHT_PX = 1229;
+const A4_HEIGHT_PX = 1133;
 
 // Computed style for the paper element - Screen view has smaller padding
 const paperStyle = computed((): CSSProperties => {

@@ -71,18 +71,15 @@
       </div>
     </main>
     
-    <footer class="footer">
-      <div class="footer-content">
-        <p>小神龙字帖</p>
-        <p>Copyright © 2025 小神龙🤣</p>
-      </div>
-    </footer>
+    <AppFooter />
   </div>
 </template>
 
 <script setup lang="ts">
 import { NButton } from 'naive-ui'
 import { useRouter } from 'vue-router'
+import AppFooter from '@/components/AppFooter.vue'  
+
 
 const router = useRouter()
 
@@ -243,25 +240,5 @@ main {
   font-size: 14px;
   color: #666;
   line-height: 1.5;
-}
-
-/* 页脚样式 */
-.footer {
-  padding: 20px 0;
-  border-top: 1px solid #f0f0f0;
-  margin-top: auto;
-}
-
-.footer-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-  text-align: center;
-  font-size: 14px;
-  color: #999;
-}
-
-.footer-content p {
-  margin: 5px 0;
 }
 </style>
