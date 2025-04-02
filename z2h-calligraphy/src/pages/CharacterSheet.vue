@@ -1,5 +1,5 @@
 <template>  
-  <div class="sheet-page">  
+  <div class="sheet-page" :style="printMarginStyles">  
     <AppHeader />  
       
     <div class="sheet-content">  
@@ -90,9 +90,10 @@
           </div>
             
           <div class="setting-item">  
-            <div class="setting-label">练习字数</div>  
-            <n-slider v-model:value="charsPerRow" :min="5" :max="20" />  
-            <div class="setting-value">{{ charsPerRow }}个</div>  
+            <div class="setting-label">练习字数</div>
+            <!-- Dynamically set max based on layout -->
+            <n-slider v-model:value="charsPerRow" :min="2" :max="layoutType === 'vertical' ? 18 : 12" :step="2"/>
+            <div class="setting-value">{{ charsPerRow }}个</div>
           </div>  
 
           <div class="setting-item">  
@@ -118,7 +119,7 @@
           <div class="setting-item">  
             <div class="setting-label">描红透明度</div>  
             <n-slider v-model:value="strokeOpacity" :min="0" :max="100" />  
-            <div class="setting-value">{{ strokeOpacity }}</div>  
+            <div class="setting-value">{{ strokeOpacity }}%</div>  
           </div>
             
           <div class="toggle-group">  
@@ -196,30 +197,53 @@ const fontSize = ref(80)
 const fontFamily = ref('楷体, KaiTi, STKaiti, serif') // 固定使用楷体
 const strokeColor = ref('lightgray')  
 const strokeOpacity = ref(10)  
-const layoutType = ref('grid') // grid, vertical  
-const charsPerRow = ref(10) // 每列字符数(每个字重复多少行)  
+const layoutType = ref('grid') // grid, vertical
+// Initialize based on initial layout
+const charsPerRow = ref(layoutType.value === 'vertical' ? 18 : 12) // 每列字符数(每个字重复多少行)
   
+// 监听练字字数变化，确保为偶数
+watch(charsPerRow, (newValue) => {
+  // Ensure even number (already handled by step=2 in slider)
+  // Max value is handled by the slider directly now
+});
+
+// 监听布局类型变化，设置默认描红字数
+watch(layoutType, (newValue) => {
+  if (newValue === 'vertical') {
+    charsPerRow.value = 18;
+  } else { // grid
+    charsPerRow.value = 12;
+  }
+  // Removed character length restriction watch
+}, { immediate: true }); // Run immediately to set initial value correctly
+
 // === 计算属性 ===
 // A4 dimensions at 96 DPI (approx)
 const A4_WIDTH_PX = 795;
-const A4_HEIGHT_PX = 1123;
+const A4_HEIGHT_PX = 1229;
 
-// Computed style for the paper element to mimic A4 with print margins
+// Computed style for the paper element - Screen view has smaller padding
 const paperStyle = computed((): CSSProperties => {
-  const margins = settingsStore.printSettings.margins;
-  const dpi = 96;
-  const mmToPx = (mm: number) => (mm / 25.4) * dpi;
+  const screenPadding = '20px'; // Smaller padding for screen display
 
   return {
     width: `${A4_WIDTH_PX}px`,
-    height: `${A4_HEIGHT_PX}px`,
-    paddingTop: `${mmToPx(margins.top)}px`,
-    paddingRight: `${mmToPx(margins.right)}px`,
-    paddingBottom: `${mmToPx(margins.bottom)}px`,
-    paddingLeft: `${mmToPx(margins.left)}px`,
+    minHeight: `${A4_HEIGHT_PX}px`, // Use min-height to allow content growth
+    padding: screenPadding, 
     boxSizing: 'border-box',
     backgroundColor: 'white',
     boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)'
+  };
+});
+
+// CSS variables for print margins
+const printMarginStyles = computed(() => {
+  const margins = settingsStore.printSettings.margins;
+  return {
+    '--print-margin-top': `${margins.top}mm`,
+    '--print-margin-right': `${margins.right}mm`,
+    '--print-margin-bottom': `${margins.bottom}mm`,
+    '--print-margin-left': `${margins.left}mm`,
   };
 });
 
@@ -230,101 +254,181 @@ interface CellData {
   isRowFirst: boolean;
 }
 
-// Calculate paginated cells based on 12-row limit
+// Calculate paginated cells based on available space
 const paginatedCells = computed((): CellData[][] => {
   if (characters.value.length === 0) return [[]]; // Return one empty page if no input
 
   const allCells: CellData[] = [];
   const inputChars = characters.value;
+  const actualCharsPerRow = charsPerRow.value || 1; // Ensure not zero
 
-  // 1. Generate all cells first (similar to previous processedCharacters logic)
+  // 1. Generate all cells first
   if (layoutType.value === 'vertical') {
-    // Vertical layout processing
+    // 竖排布局处理
     for (let charIndex = 0; charIndex < inputChars.length; charIndex++) {
-      for (let rowIndex = 0; rowIndex < charsPerRow.value; rowIndex++) {
-        allCells.push({ char: inputChars[charIndex], charGroup: charIndex, isRowFirst: rowIndex === 0 });
+      for (let rowIndex = 0; rowIndex < actualCharsPerRow; rowIndex++) {
+        allCells.push({ 
+          char: inputChars[charIndex], 
+          charGroup: charIndex, 
+          isRowFirst: rowIndex === 0 
+        });
       }
     }
   } else {
-    // Grid layout processing
+    // 网格布局处理
     for (let i = 0; i < inputChars.length; i++) {
       const char = inputChars[i];
-      for (let j = 0; j < charsPerRow.value; j++) {
-        allCells.push({ char, charGroup: i, isRowFirst: j === 0 });
+      for (let j = 0; j < actualCharsPerRow; j++) {
+        allCells.push({ 
+          char, 
+          charGroup: i, 
+          isRowFirst: j === 0 
+        });
       }
     }
   }
 
-  // 2. Calculate cells per page based on 12-row limit
+  // 2. 计算每页可容纳的单元格数量 (基于打印尺寸和边距)
   const dpi = 96;
   const mmToPx = (mm: number) => (mm / 25.4) * dpi;
   const margins = settingsStore.printSettings.margins;
   const availableWidth = A4_WIDTH_PX - mmToPx(margins.left) - mmToPx(margins.right);
-  
-  let cellsPerPage: number;
-  const maxRowsPerPage = 12;
+  const availableHeight = A4_HEIGHT_PX - mmToPx(margins.top) - mmToPx(margins.bottom);
 
   if (layoutType.value === 'vertical') {
-    const maxCharsPerPageVertical = 12; // Treat 12 rows limit as 12 characters vertically
-    cellsPerPage = maxCharsPerPageVertical * charsPerRow.value;
-  } else {
-    const columnGapValue = 0; // Currently 0 in gridContainerStyle
-    const effectiveCellWidth = gridSize.value + columnGapValue;
-    const colsPerPage = Math.max(1, Math.floor((availableWidth + columnGapValue) / effectiveCellWidth));
-    cellsPerPage = maxRowsPerPage * colsPerPage * charsPerRow.value; // Total cells for 12 rows
-    cellsPerPage = maxRowsPerPage * colsPerPage;
-
-  }
-
-  // 3. Split allCells into pages
-  const pages: CellData[][] = [];
-  for (let i = 0; i < allCells.length; i += cellsPerPage) {
-    pages.push(allCells.slice(i, i + cellsPerPage));
-  }
-
-  // Handle case where no cells are generated (e.g., initial state)
-  if (pages.length === 0 && characters.value.length === 0) {
-      return [[]]; // Return a single empty page structure
-  }
+    // 3. 竖排布局分页处理
+    const pages: CellData[][] = [];
+    // 计算每列实际容纳的字符数量
+    const charsInColumn = actualCharsPerRow;
+    // 计算可容纳的最大列数，减少一列并增加左右边距20px
+    const horizontalMargin = 20; // 左右各增加20px边距
+    const availableWidthWithMargin = availableWidth - (horizontalMargin * 2);
+    const maxColsPerPage = Math.floor(availableWidthWithMargin / gridSize.value);
+    // 确保至少能放11列（比之前的12列少1列）
+    const actualMaxCols = Math.min(12, Math.max(11, maxColsPerPage));
+    // 每页能容纳的总字符数
+    const charsPerPage = actualMaxCols; // 每页字符数 = 列数
     
-  // If pages is empty but there should be content, add at least one page structure
-  if (pages.length === 0 && allCells.length > 0) {
-      pages.push(allCells); // Put all cells on the first page if calculation failed somehow
-  } else if (pages.length === 0 && characters.value.length > 0 && allCells.length === 0) {
-       // Case where input exists but cell generation logic failed? Return empty page.
-       return [[]];
+    // 按页分割
+    for (let startChar = 0; startChar < inputChars.length; startChar += charsPerPage) {
+      const endChar = Math.min(startChar + charsPerPage, inputChars.length);
+      const pageChars = inputChars.slice(startChar, endChar);
+      
+      // 创建当前页的所有单元格
+      const pageCells: CellData[] = [];
+      for (let i = 0; i < pageChars.length; i++) {
+        for (let j = 0; j < charsInColumn; j++) {
+          pageCells.push({
+            char: pageChars[i],
+            charGroup: startChar + i,
+            isRowFirst: j === 0
+          });
+        }
+      }
+      
+      pages.push(pageCells);
+    }
+    
+    return pages.length > 0 ? pages : [[]];
+  } else {
+    // 3. 网格布局分页处理
+    const pages: CellData[][] = [];
+    
+    // 计算网格布局参数
+    const gridPaddingTop = 20; // paddingTop in gridContainerStyle
+    const gridRowGap = 30;     // rowGap in gridContainerStyle
+    const effectiveHeight = availableHeight - gridPaddingTop;
+    // 每行实际高度 = 字体大小 + 间距
+    const rowHeight = gridSize.value + gridRowGap;
+    // 计算每页可容纳的行数，向下取整，确保满行显示 (增加3行额外空间)
+    const rowsPerPage = Math.floor(effectiveHeight / rowHeight) + 3;
+    // 计算每行可容纳的字符数
+    const colsPerRow = Math.floor(availableWidth / gridSize.value);
+    
+    // 总共能容纳的字符格子数（每页）
+    const cellsPerPage = rowsPerPage * colsPerRow;
+    
+    // 按格子数量分页，确保充分利用每页空间
+    let currentPage: CellData[] = [];
+    let charIndex = 0;
+    
+    // 循环遍历所有字符
+    while (charIndex < inputChars.length) {
+      const char = inputChars[charIndex];
+      
+      // 为当前字符添加所有练习行
+      const cellsNeededForChar = actualCharsPerRow;
+      const cellsAvailableInPage = cellsPerPage - currentPage.length;
+      
+      // 检查当前页是否能容纳这个字符的所有练习行
+      if (cellsNeededForChar <= cellsAvailableInPage) {
+        // 当前页可以容纳这个字符的所有练习行
+        for (let j = 0; j < actualCharsPerRow; j++) {
+          currentPage.push({
+            char: char,
+            charGroup: charIndex,
+            isRowFirst: j === 0
+          });
+        }
+        charIndex++; // 移动到下一个字符
+      } else {
+        // 当前页不能完整容纳这个字符，创建新页
+        pages.push(currentPage);
+        currentPage = [];
+      }
+    }
+    
+    // 添加最后一页（如果有内容）
+    if (currentPage.length > 0) {
+      pages.push(currentPage);
+    }
+    
+    return pages.length > 0 ? pages : [[]];
   }
-
-  return pages;
 });
 
 // 计算样式  
 const gridContainerStyle = computed(() => {
   // 基本设置 - 适用于所有布局
-  const baseStyle = {
-    paddingTop: '20px', // 增加顶部空间，确保拼音显示
-    rowGap: '30px',     // 增加行间距，确保拼音有足够空间
-    columnGap: '0px',  // 增加列间距，提高可读性
+  const baseStyle: CSSProperties = {
+    paddingTop: layoutType.value === 'vertical' ? '10px' : '20px',
+    boxSizing: 'border-box',
+    width: '100%',
   };
   
   if (layoutType.value === 'vertical') {  
-    // 竖排布局，按列排列，首行是所有行首字
-    const charCount = characters.value.length || 1;
+    // 竖排布局 (屏幕预览样式)
+    // Calculate max columns based on available width *within screen padding*
+    const availableWidthInsidePaper = A4_WIDTH_PX - 40; // 20px padding each side
+    const horizontalMargin = 20; // 左右各增加20px边距
+    const availableWidthWithMargin = availableWidthInsidePaper - (horizontalMargin * 2);
+    const maxColsForScreen = Math.max(1, Math.floor(availableWidthWithMargin / gridSize.value));
+    // Target up to 12 columns for the grid structure if they fit
+    const targetGridCols = Math.min(12, maxColsForScreen);
+    // Ensure the grid *structure* has at least 11 columns if possible
+    const displayGridCols = Math.max(11, targetGridCols);
+    
     return {  
       ...baseStyle,
       display: 'grid',
-      gridTemplateColumns: `repeat(${charCount}, ${gridSize.value}px)`,
-      gridTemplateRows: `repeat(${charsPerRow.value}, ${gridSize.value}px)`,
-      justifyContent: 'center'
+      // Define grid structure columns based on calculation (min 11, max 12 if fit)
+      gridTemplateColumns: `repeat(${displayGridCols}, ${gridSize.value}px)`,
+      gridTemplateRows: `repeat(${charsPerRow.value || 1}, ${gridSize.value}px)`,
+      justifyContent: 'center', // 改为center使其居中显示
+      gridAutoFlow: 'column',
+      gridAutoColumns: `${gridSize.value}px`,
+      paddingLeft: `${horizontalMargin}px`,
+      paddingRight: `${horizontalMargin}px`,
     }  
   } else { // grid (默认)
     // 网格布局
     return {  
       ...baseStyle,
       display: 'grid',  
-      gridTemplateColumns: `repeat(auto-fill, ${gridSize.value}px)`,  
-      gridAutoRows: `${gridSize.value}px`, // 固定高度
-      justifyContent: 'center'
+      gridTemplateColumns: `repeat(auto-fit, minmax(${gridSize.value}px, 0fr))`,
+      gridAutoRows: `${gridSize.value}px`,
+      justifyContent: 'center',
+      rowGap: '30px'
     }  
   }  
 })  
@@ -346,7 +450,8 @@ const characterStyle = computed((): CSSProperties => {
     position: 'absolute',
     top: '50%',
     left: '50%',
-    transform: 'translate(-50%, -50%)'
+    transform: 'translate(-50%, -50%)',
+    writingMode: layoutType.value === 'vertical' ? 'vertical-rl' : 'horizontal-tb'
   }  
 })  
   
@@ -607,10 +712,18 @@ onMounted(() => {
   
 /* 打印样式 */
 @media print {  
-  /* Add @page rule to remove margins for native print */
   @page {
-    margin: 0;
-    size: auto; /* Let browser determine size based on content/settings */
+    margin: 0; /* Remove browser default margins */
+    size: A4;  /* Explicitly set paper size for print */
+  }
+
+  body {
+    margin: 0; /* Ensure body has no margin */
+    background-color: white !important; /* Ensure white background */
+  }
+
+  .sheet-page {
+    min-height: unset; /* Allow page to shrink if needed */
   }
 
   .app-header, .control-panel {  
@@ -619,24 +732,52 @@ onMounted(() => {
     
   .sheet-content {  
     padding: 0;  
+    display: block; /* Override flex for print */
+    max-width: none; /* Remove max-width */
+    margin: 0;
   }  
     
   .sheet-preview {  
     overflow: visible;  
-    background-color: white;  
+    background-color: transparent; /* Remove background for print */
     padding: 0;  
     display: block; /* Reset flex layout for print */
     gap: 0;
+    border-radius: 0;
+    height: 100vh; /* Try setting preview height */
   }  
     
-  .paper {  
-    box-shadow: none;  
-    min-height: auto;  
-    margin: 0; /* Reset margin for print */
-  }
-  
   .page {
     page-break-after: always; /* Ensure page breaks between .page elements */
+    width: 100%; /* Ensure page takes full width */
+    height: 100%; /* Ensure page takes full height */
+    display: flex; /* Use flex to center paper */
+    justify-content: center;
+    align-items: flex-start; /* Align paper to top */
+    overflow: hidden; /* Prevent content spill */
+    background-color: transparent; /* Ensure no background interfere */
+  }
+
+  .paper {  
+    box-shadow: none;  
+    margin: 0; /* Reset margin for print */
+    width: 210mm; /* Explicit A4 width */
+    height: 297mm; /* Explicit A4 height */
+    background-color: white; /* Ensure background for content */
+    /* Apply print margins using padding with CSS variables */
+    padding-top: var(--print-margin-top);
+    padding-right: var(--print-margin-right);
+    padding-bottom: var(--print-margin-bottom);
+    padding-left: var(--print-margin-left);
+    box-sizing: border-box; 
+  }
+  
+  .character-grid {
+    /* Ensure grid respects padding */
+    width: 100%;
+    /* Height might need adjustment based on content */
+    /* height: 100%; */ 
+    box-sizing: border-box;
   }
 
   /* Force printing background graphics for grid */

@@ -10,8 +10,6 @@ declare module 'vue' {
   export interface GlobalComponents {
     AppHeader: typeof import('./components/AppHeader.vue')['default']
     CharacterInfo: typeof import('./components/CharacterInfo.vue')['default']
-    NCollapse: typeof import('naive-ui')['NCollapse']
-    NCollapseItem: typeof import('naive-ui')['NCollapseItem']
     PinyinDisplay: typeof import('./components/PinyinDisplay.vue')['default']
     PinyinSheet: typeof import('./components/PinyinSheet.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
