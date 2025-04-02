@@ -2,28 +2,20 @@
   <header class="app-header">
     <div class="header-container">
       <router-link to="/" class="logo">
+        <img src="@/assets/images/小神龙.png" alt="小神龙" class="logo-img">
         小神龙字帖
       </router-link>
       
       <nav class="nav">
-        <n-dropdown
+        <router-link
           v-for="menu in menus"
           :key="menu.key"
-          :options="menu.children"
-          @select="handleMenuSelect"
-          trigger="hover"
-          :show-arrow="true"
+          :to="menu.path"
+          class="nav-item"
+          :class="{ active: isActive(menu.key) }"
         >
-          <span 
-            class="nav-item" 
-            :class="{ active: isActive(menu.key) }"
-          >
-            {{ menu.label }}
-            <n-icon size="tiny" class="dropdown-icon">
-              <ChevronDownOutline />
-            </n-icon>
-          </span>
-        </n-dropdown>
+          {{ menu.label }}
+        </router-link>
       </nav>
     </div>
   </header>
@@ -31,8 +23,6 @@
 
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
-import { NDropdown, NIcon } from 'naive-ui'
-import { ChevronDownOutline } from '@vicons/ionicons5'
 
 const router = useRouter()
 const route = useRoute()
@@ -42,43 +32,23 @@ const menus = [
   {
     key: 'chinese',
     label: '语文字帖',
-    children: [
-      {
-        key: '/chinese/character',
-        label: '汉字字帖'
-      }
-    ]
+    path: '/chinese/character'
   },
   {
     key: 'ChinesePoem',
     label: '诗词字帖',
-    children: [
-      {
-        key: '/chinese/poem',
-        label: '诗词字帖'
-      }
-    ]
+    path: '/chinese/poem'
   },
   {
     key: 'practice',
     label: '控笔练习',
-    children: [
-      {
-        key: '/practice',
-        label: '控笔练习'
-      }
-    ]
+    path: '/practice'
   }
 ]
 
 // 检查菜单项是否激活
 function isActive(menuKey: string) {
   return route.path.startsWith(`/${menuKey}`)
-}
-
-// 处理菜单选择
-function handleMenuSelect(key: string) {
-  router.push(key)
 }
 </script>
 
@@ -107,6 +77,14 @@ function handleMenuSelect(key: string) {
   font-weight: 600;
   color: #333;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-img {
+  height: 32px;
+  width: auto;
 }
 
 .nav {
@@ -115,21 +93,19 @@ function handleMenuSelect(key: string) {
 }
 
 .nav-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  padding: 4px 0;
   color: #333;
   font-size: 16px;
+  text-decoration: none;
+  padding: 4px 0;
+  transition: color 0.3s;
+}
+
+.nav-item:hover {
+  color: #4361ee;
 }
 
 .nav-item.active {
   color: #4361ee;
   font-weight: 500;
-}
-
-.dropdown-icon {
-  margin-top: 2px;
 }
 </style>

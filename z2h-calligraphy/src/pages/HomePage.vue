@@ -1,14 +1,6 @@
 <template>
   <div class="home-page">
-    <header class="header">
-      <div class="header-container">
-        <div class="logo">小神龙字帖</div>
-        <nav class="nav">
-          <a href="chinese/character" class="nav-item">语文字帖</a>
-          <a href="#" class="nav-item">控笔练习</a>
-        </nav>
-      </div>
-    </header>
+    <AppHeader />
     
     <main>
       <div class="hero">
@@ -62,6 +54,7 @@
 <script setup lang="ts">
 import { NButton } from 'naive-ui'
 import { useRouter } from 'vue-router'
+import AppHeader from '@/components/AppHeader.vue'  
 import AppFooter from '@/components/AppFooter.vue'  
 
 
