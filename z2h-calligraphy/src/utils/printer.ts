@@ -20,7 +20,7 @@ export function printContent(options: PrintOptions = {}) {
     title: document.title,
     content: null,
     addStyles: '',
-    removeSelectors: ['.app-header', '.control-panel', '.n-button', '.panel-section', '.n-modal'],
+    removeSelectors: ['.app-header', '.control-panel', '.n-button', '.panel-section', '.n-modal' ,'.footer'],
     callback: () => {}
   }
   
