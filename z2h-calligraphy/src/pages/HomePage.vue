@@ -13,7 +13,7 @@
     <main>
       <div class="hero">
         <div class="logo-animation">
-          <img src="@/assets/vue.svg" alt="小神龙字帖" class="logo-image" />
+          <img src="@/assets/images/小神龙.png" alt="小神龙字帖" class="logo-image" />
         </div>
         
         <div class="slogan">
@@ -73,8 +73,8 @@
     
     <footer class="footer">
       <div class="footer-content">
-        <p>Z2H = Zero to Hero</p>
-        <p>Copyright © 2024 Z2H.CN</p>
+        <p>小神龙字帖</p>
+        <p>Copyright © 2025 小神龙🤣</p>
       </div>
     </footer>
   </div>
