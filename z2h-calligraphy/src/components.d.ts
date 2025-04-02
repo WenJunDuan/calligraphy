@@ -10,9 +10,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./components/AppFooter.vue')['default']
     AppHeader: typeof import('./components/AppHeader.vue')['default']
-    CharacterInfo: typeof import('./components/CharacterInfo.vue')['default']
     PinyinDisplay: typeof import('./components/PinyinDisplay.vue')['default']
-    PinyinSheet: typeof import('./components/PinyinSheet.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     StrokeAnimation: typeof import('./components/StrokeAnimation.vue')['default']
