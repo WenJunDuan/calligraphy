@@ -1,103 +1,51 @@
-import { defineStore } from 'pinia'
-import { ref, reactive } from 'vue'
+import { defineStore } from 'pinia';
+import { ref, reactive } from 'vue';
+import { SheetSettings } from '@/types';
+import { DEFAULT_SHEET_SETTINGS } from '@/constants';
 
-interface SheetSettings {
-  gridType: string
-  fontFamily: string
-  gridSize: number
-  fontSize: number
-  fontColor: string
-  guideColor: string
-  guideOpacity: number
-  verticalOffset: number
-  showReference: boolean
-  showGuides: boolean
-  showPinyin: boolean
-  withTone: boolean
-  pinyinFontSize: number
-  pinyinColor: string
-  // 新增设置
-  repeatCount: number
-  practiceMode: string
-  layoutType: string
-  // 单字练习设置
-  isSingleCharMode: boolean
-  charsPerRow: number
-}
-
+/**
+ * 字帖设置存储
+ * 管理字帖的样式、布局和内容设置
+ */
 export const useSheetStore = defineStore('sheet', () => {
-  // 设置状态
-  const settings = reactive<SheetSettings>({
-    gridType: 'tian', // tian-田字格, mi-米字格, hui-回宫格
-    fontFamily: '楷体',
-    gridSize: 64,
-    fontSize: 80,
-    fontColor: 'black',
-    guideColor: 'lightgray',
-    guideOpacity: 10,
-    verticalOffset: 0,
-    showReference: true,
-    showGuides: true,
-    showPinyin: true,
-    withTone: true,
-    pinyinFontSize: 40,
-    pinyinColor: '#666666',
-    // 新增设置
-    repeatCount: 1,
-    practiceMode: 'standard', // standard, trace, blank
-    layoutType: 'grid', // grid, horizontal, vertical
-    // 单字练习设置
-    isSingleCharMode: true,
-    charsPerRow: 10
-  })
+  // 字帖设置状态，使用默认值初始化
+  const settings = reactive<SheetSettings>({ ...DEFAULT_SHEET_SETTINGS });
 
   // 当前输入的文字
-  const inputText = ref('')
+  const inputText = ref('');
 
   // 最近使用的文字历史
-  const recentTexts = ref<string[]>([])
+  const recentTexts = ref<string[]>([]);
 
-  // 更新设置
+  /**
+   * 更新设置
+   * @param newSettings 要更新的设置项
+   */
   function updateSettings(newSettings: Partial<SheetSettings>) {
-    Object.assign(settings, newSettings)
+    Object.assign(settings, newSettings);
   }
 
-  // 设置输入文字
+  /**
+   * 设置输入文字
+   * @param text 输入的文字
+   */
   function setInputText(text: string) {
-    inputText.value = text
+    inputText.value = text;
     
     // 添加到最近使用的历史，并保持最大长度为10
     if (text && !recentTexts.value.includes(text)) {
-      recentTexts.value.unshift(text)
+      recentTexts.value.unshift(text);
       if (recentTexts.value.length > 10) {
-        recentTexts.value = recentTexts.value.slice(0, 10)
+        recentTexts.value = recentTexts.value.slice(0, 10);
       }
     }
   }
 
-  // 重置设置为默认值
+  /**
+   * 重置设置为默认值
+   */
   function resetSettings() {
-    Object.assign(settings, {
-      gridType: 'tian',
-      fontFamily: '楷体',
-      gridSize: 64,
-      fontSize: 80,
-      fontColor: 'black',
-      guideColor: 'lightgray',
-      guideOpacity: 10,
-      verticalOffset: 0,
-      showReference: true,
-      showGuides: true,
-      showPinyin: true,
-      withTone: true,
-      pinyinFontSize: 40,
-      pinyinColor: '#666666',
-      repeatCount: 1,
-      practiceMode: 'standard',
-      layoutType: 'grid',
-      isSingleCharMode: true,
-      charsPerRow: 10
-    })
+    Object.assign(settings, DEFAULT_SHEET_SETTINGS);
   }
 
   return {
@@ -107,11 +55,11 @@ export const useSheetStore = defineStore('sheet', () => {
     updateSettings,
     setInputText,
     resetSettings
-  }
+  };
 }, {
   // 持久化存储配置
   persist: {
     key: 'z2h-sheet-settings',
     paths: ['settings', 'recentTexts']
   }
-})
+});

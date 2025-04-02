@@ -23,8 +23,3 @@ app.mount('#app')
 document.fonts.ready.then(() => {
   console.log('字体已加载完成')
 })
-
-// 应用性能监控
-if (import.meta.env.PROD) {
-  // 生产环境性能监控代码（如需）
-}

@@ -1,31 +1,21 @@
 /**
- * 字帖网格类型
+ * 网格生成工具
  */
-export type GridType = 'tian' | 'mi' | 'hui' | 'jiu' | 'fang' | 'mitian' | 'si'
+import { GridType, GridStyleConfig } from '@/types';
+import { DEFAULT_GRID_STYLE, GRID_OPTIONS } from '@/constants';
 
 /**
- * 网格样式配置
+ * 获取所有支持的网格类型选项
+ * @returns 网格类型选项数组
  */
-export interface GridStyleConfig {
-  size: number
-  borderColor: string
-  borderWidth: number
-  guideColor: string
-  guideWidth: number
-  backgroundColor: string
+export function getGridTypeOptions() {
+  return GRID_OPTIONS;
 }
 
 /**
  * 默认网格样式
  */
-export const defaultGridStyle: GridStyleConfig = {
-  size: 64,
-  borderColor: '#aaaaaa',
-  borderWidth: 1.5,
-  guideColor: '#cccccc',
-  guideWidth: 1,
-  backgroundColor: 'white'
-}
+export const defaultGridStyle: GridStyleConfig = DEFAULT_GRID_STYLE;
 
 /**
  * 生成田字格SVG
@@ -189,20 +179,4 @@ export function generateGridBackgroundCSS(type: GridType, config: Partial<GridSt
   const encodedSVG = encodeURIComponent(svg)
   
   return `background-image: url("data:image/svg+xml,${encodedSVG}"); background-repeat: no-repeat; background-size: 100% 100%;`
-}
-
-/**
- * 获取所有支持的网格类型选项
- * @returns 网格类型选项数组
- */
-export function getGridTypeOptions(): { label: string; value: GridType }[] {
-  return [
-    { label: '田字格', value: 'tian' },
-    { label: '米字格', value: 'mi' },
-    { label: '回宫格', value: 'hui' },
-    { label: '九宫格', value: 'jiu' },
-    { label: '方格', value: 'fang' },
-    { label: '米田格', value: 'mitian' },
-    { label: '四线格', value: 'si' }
-  ]
 }

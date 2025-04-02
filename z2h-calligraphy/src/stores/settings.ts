@@ -1,21 +1,13 @@
-import { defineStore } from 'pinia'
-import { ref, reactive } from 'vue'
-import { useColorMode } from '@vueuse/core'
+import { defineStore } from 'pinia';
+import { ref, reactive } from 'vue';
+import { useColorMode } from '@vueuse/core';
+import { AppSettings, PrintSettings } from '@/types';
+import { DEFAULT_APP_SETTINGS } from '@/constants';
 
-// 页面打印设置
-interface PrintSettings {
-  paperSize: 'a4' | 'a5' | 'letter' | 'custom'
-  orientation: 'portrait' | 'landscape'
-  margins: {
-    top: number
-    right: number
-    bottom: number
-    left: number
-  }
-  headerFooter: boolean
-  scale: number
-}
-
+/**
+ * 应用设置存储
+ * 管理全局应用设置，如颜色模式、打印设置等
+ */
 export const useSettingsStore = defineStore('settings', () => {
   // 主题模式
   const colorMode = useColorMode({
@@ -27,33 +19,37 @@ export const useSettingsStore = defineStore('settings', () => {
       dark: 'dark',
       auto: 'auto'
     }
-  })
+  });
 
   // 打印设置
-  const printSettings = reactive<PrintSettings>({
-    paperSize: 'a4',
-    orientation: 'portrait',
-    margins: {
-      top: 5,
-      right: 10,
-      bottom: 12,
-      left: 10
-    },
-    headerFooter: false,
-    scale: 100
-  })
+  const printSettings = reactive<PrintSettings>({ ...DEFAULT_APP_SETTINGS.printSettings });
 
   // 是否显示欢迎指引
-  const showWelcomeGuide = ref(true)
+  const showWelcomeGuide = ref(DEFAULT_APP_SETTINGS.showWelcomeGuide);
 
-  // 更新打印设置
+  /**
+   * 更新打印设置
+   * @param newSettings 要更新的打印设置
+   */
   function updatePrintSettings(newSettings: Partial<PrintSettings>) {
-    Object.assign(printSettings, newSettings)
+    Object.assign(printSettings, newSettings);
   }
   
-  // 设置是否显示欢迎指引
+  /**
+   * 设置是否显示欢迎指引
+   * @param show 是否显示
+   */
   function setShowWelcomeGuide(show: boolean) {
-    showWelcomeGuide.value = show
+    showWelcomeGuide.value = show;
+  }
+
+  /**
+   * 重置设置为默认值
+   */
+  function resetSettings() {
+    colorMode.value = DEFAULT_APP_SETTINGS.colorMode;
+    Object.assign(printSettings, DEFAULT_APP_SETTINGS.printSettings);
+    showWelcomeGuide.value = DEFAULT_APP_SETTINGS.showWelcomeGuide;
   }
 
   return {
@@ -61,12 +57,13 @@ export const useSettingsStore = defineStore('settings', () => {
     printSettings,
     showWelcomeGuide,
     updatePrintSettings,
-    setShowWelcomeGuide
-  }
+    setShowWelcomeGuide,
+    resetSettings
+  };
 }, {
   // 持久化存储配置
   persist: {
     key: 'z2h-app-settings',
     paths: ['printSettings', 'showWelcomeGuide']
   }
-})
+});

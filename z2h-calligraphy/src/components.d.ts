@@ -10,10 +10,15 @@ declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./components/AppFooter.vue')['default']
     AppHeader: typeof import('./components/AppHeader.vue')['default']
+    ControlPanel: typeof import('./components/ControlPanel.vue')['default']
     PinyinDisplay: typeof import('./components/PinyinDisplay.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SettingItem: typeof import('./components/SettingItem.vue')['default']
+    SheetContainer: typeof import('./components/SheetContainer.vue')['default']
+    SheetPreview: typeof import('./components/SheetPreview.vue')['default']
     StrokeAnimation: typeof import('./components/StrokeAnimation.vue')['default']
     StrokeDisplay: typeof import('./components/StrokeDisplay.vue')['default']
+    ToggleSetting: typeof import('./components/ToggleSetting.vue')['default']
   }
 }
