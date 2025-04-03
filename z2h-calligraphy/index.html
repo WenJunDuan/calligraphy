@@ -1,66 +1,68 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
   <head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="/src/assets/images/小神龙.png">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/src/assets/images/小神龙.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>小神龙字帖 - 汉字书写练习应用</title>
-    <meta name="description" content="小神龙字帖是一款专注于汉字书写练习的应用，提供田字格、米字格、回宫格等多种背景，支持自定义文本生成字帖和控笔练习。">
-    
+    <meta
+      name="description"
+      content="小神龙字帖是一款专注于汉字书写练习的应用，提供田字格、米字格、回宫格等多种背景，支持自定义文本生成字帖和控笔练习。"
+    />
+
     <!-- 预加载系统字体 -->
     <style>
+      /* 系统字体 */
       @font-face {
-        font-family: "KaiTi";
-        src: local("KaiTi"), local("STKaiti");
+        font-family: 'KaiTi';
+        src: local('KaiTi'), local('STKaiti');
         font-display: swap;
       }
-      
+
       @font-face {
-        font-family: "SimSun";
-        src: local("SimSun"), local("Songti SC");
+        font-family: 'LiSu';
+        src: local('LiSu'), local('STLiti');
         font-display: swap;
       }
-      
+
+      /* 自定义字体 */
       @font-face {
-        font-family: "SimHei";
-        src: local("SimHei"), local("Heiti SC");
+        font-family: 'HanYiShouJin';
+        src: url('/src/assets/fonts/HanYiShouJin.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
         font-display: swap;
       }
-      
+
       @font-face {
-        font-family: "LiSu";
-        src: local("LiSu"), local("STLiti");
+        font-family: 'ShouJinJiaCu';
+        src: url('/src/assets/fonts/ShouJinJiaCu.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
         font-display: swap;
       }
-      
-      /* 预加载字体测试元素 */
-      .font-preload {
-        position: absolute;
-        visibility: hidden;
-        top: -9999px;
-        left: -9999px;
+
+      @font-face {
+        font-family: 'TianYingzhangKaiShu';
+        src: url('/src/assets/fonts/TianYingzhangKaiShu.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
       }
-      
-      .font-kaiti { font-family: "KaiTi", serif; }
-      .font-simsun { font-family: "SimSun", serif; }
-      .font-simhei { font-family: "SimHei", sans-serif; }
-      .font-lisu { font-family: "LiSu", serif; }
     </style>
-    
-    <!-- 添加统计（如需）-->
-    <!-- <script async defer data-website-id="YOUR-ID" src="YOUR-ANALYTICS-URL"></script> -->
   </head>
   <body>
     <div id="app"></div>
-    
-    <!-- 字体预加载测试元素 -->
-    <div class="font-preload">
-      <span class="font-kaiti">楷体</span>
-      <span class="font-simsun">宋体</span>
-      <span class="font-simhei">黑体</span>
-      <span class="font-lisu">隶书</span>
+
+    <!-- 预加载字体内容 -->
+    <div style="position: absolute; visibility: hidden; top: -9999px; left: -9999px">
+      <span style="font-family: 'KaiTi'">楷体</span>
+      <span style="font-family: 'LiSu'">隶书</span>
+      <span style="font-family: 'HanYiShouJin'">汉仪瘦金体</span>
+      <span style="font-family: 'ShouJinJiaCu'">加粗瘦金体</span>
+      <span style="font-family: 'TianYingzhangKaiShu'">田英章楷书</span>
     </div>
-    
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

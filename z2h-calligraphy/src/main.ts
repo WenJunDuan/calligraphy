@@ -16,10 +16,9 @@ const app = createApp(App)
 app.use(pinia)
 app.use(router)
 
-// 挂载应用
-app.mount('#app')
-
-// 预加载常用字体
+// 确保字体资源已加载后再挂载应用
 document.fonts.ready.then(() => {
-  console.log('字体已加载完成')
+  console.log('系统字体已加载完成')
+  // 挂载应用
+  app.mount('#app')
 })

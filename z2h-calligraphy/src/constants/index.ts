@@ -13,8 +13,7 @@ export const FONT_OPTIONS: OptionItem[] = [
   { label: '隶书', value: '隶书, LiSu, STLiti, serif' },
   { label: '汉仪瘦金体', value: '汉仪瘦金体, HanYiShouJin, serif' },
   { label: '加粗瘦金体', value: '加粗瘦金体, ShouJinJiaCu, serif' },
-  { label: '田英章楷书', value: '田英章楷书, Tian Yingzhang KaiShu, serif' },
-  { label: '吴玉生行书', value: '吴玉生行书, Wu Yushuang Xingshu, serif' }
+  { label: '田英章楷书', value: '田英章楷书, TianYingzhangKaiShu, serif' }
 ]
 
 /**

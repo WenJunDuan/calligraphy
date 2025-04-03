@@ -181,6 +181,23 @@ watch(layoutType, (newValue) => {
   }
 }, { immediate: true }); // Run immediately to set initial value correctly
 
+// 监听字体变化
+watch(fontFamily, (newValue) => {
+  console.log(`字体已更改为 '${newValue}'`);
+  // 从fontFamily中提取字体名称
+  const fontFamilies = newValue.split(',').map(name => name.trim());
+
+  // 搜索fontOptions找到匹配的字体选项
+  const fontOption = fontsStore.fontOptions.find(option =>
+    fontFamilies.some(name => option.value.includes(name))
+  );
+
+  // 如果找到匹配的字体选项，尝试加载字体
+  if (fontOption) {
+    console.log(`字体 '${fontOption.label}' 已选择`);
+  }
+}, { immediate: true });
+
 // === 计算属性 ===
 // A4 dimensions from constants
 const A4_WIDTH_PX = A4_DIMENSIONS.WIDTH_PX;
@@ -294,6 +311,7 @@ function loadFromStore() {
     showStrokes.value = settings.showGuides !== undefined ? settings.showGuides : true;
     layoutType.value = settings.layoutType as LayoutType || 'grid';
     charsPerRow.value = settings.charsPerRow || DEFAULT_SHEET_SETTINGS.charsPerRow;
+    fontFamily.value = settings.fontFamily || DEFAULT_SHEET_SETTINGS.fontFamily;
   }
 
   // 加载上次输入的文本  
@@ -306,7 +324,7 @@ function loadFromStore() {
 watch([
   gridType, gridSize, fontSize, strokeColor,
   strokeOpacity, showPinyin, showStrokes,
-  layoutType, charsPerRow
+  layoutType, charsPerRow, fontFamily
 ], () => {
   sheetStore.updateSettings({
     gridType: gridType.value,
@@ -584,14 +602,9 @@ onMounted(() => {
   .paper {
     box-shadow: none;
     margin: 0;
-    /* Reset margin for print */
     width: 210mm;
-    /* Explicit A4 width */
     height: 297mm;
-    /* Explicit A4 height */
     background-color: white;
-    /* Ensure background for content */
-    /* Apply print margins using padding with CSS variables */
     padding-top: var(--print-margin-top);
     padding-right: var(--print-margin-right);
     padding-bottom: var(--print-margin-bottom);
@@ -600,10 +613,7 @@ onMounted(() => {
   }
 
   .character-grid {
-    /* Ensure grid respects padding */
     width: 100%;
-    /* Height might need adjustment based on content */
-    /* height: 100%; */
     box-sizing: border-box;
   }
 
