@@ -17,7 +17,6 @@ declare module 'vue' {
     SettingItem: typeof import('./components/SettingItem.vue')['default']
     SheetContainer: typeof import('./components/SheetContainer.vue')['default']
     SheetPreview: typeof import('./components/SheetPreview.vue')['default']
-    StrokeAnimation: typeof import('./components/StrokeAnimation.vue')['default']
     StrokeDisplay: typeof import('./components/StrokeDisplay.vue')['default']
     ToggleSetting: typeof import('./components/ToggleSetting.vue')['default']
   }

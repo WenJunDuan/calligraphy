@@ -9,8 +9,8 @@
         </div>
         
         <div class="slogan">
-          <p class="slogan-text">用正确的方法刻到最练习</p>
-          <p class="sub-slogan">每个人都能写出一手漂亮的字</p>
+          <p class="slogan-text">与笔墨交友不累，与碑帖谈心蕞真。</p>
+          <p class="sub-slogan">心中有沟壑，笔墨做山河，提笔及星辰日月落笔仍留有余晖。</p>
         </div>
         
         <div class="cta-button">
