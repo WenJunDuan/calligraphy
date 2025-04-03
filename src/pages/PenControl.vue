@@ -24,8 +24,6 @@
                     v-html="getPatternSvg(patternId)"
                     :style="patternStyle"
                   ></div>
-                  
-                  <!-- 移除了嵌入文字功能 -->
                 </div>
               </div>
             </template>
@@ -118,8 +116,6 @@
             <n-slider v-model:value="lineOpacity" :min="0" :max="100" />
             <template #value>{{ lineOpacity }}%</template>
           </SettingItem>
-          
-          <!-- 移除了嵌入文字相关的设置 -->
         </div>
       </ControlPanel>
     </template>
@@ -127,23 +123,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, CSSProperties } from 'vue'
-import { NSlider, NSelect, NInput } from 'naive-ui'
+import { ref, computed, watch } from 'vue'
+import { NSlider, NSelect } from 'naive-ui'
 import SheetContainer from '@/components/SheetContainer.vue'
 import SheetPreview from '@/components/SheetPreview.vue'
 import ControlPanel from '@/components/ControlPanel.vue'
 import SettingItem from '@/components/SettingItem.vue'
-import ToggleSetting from '@/components/ToggleSetting.vue'
 import { PRACTICE_PATTERNS, COLOR_OPTIONS } from '@/constants'
-import { useFontsStore, useSettingsStore } from '@/stores'
+import { useSettingsStore } from '@/stores'
 import { printContent, exportAsPDF } from '@/utils/printer'
-import { calculateCharacterStyle } from '@/utils/sheetUtils'
 import { generatePatternSVG } from '@/utils/strokeGen'
 
 // 存储引用
 const previewRef = ref(null)
 const settingsStore = useSettingsStore()
-const fontsStore = useFontsStore()
 
 // 图案组
 const patternGroups = {
@@ -161,7 +154,6 @@ const patternSize = ref(50)
 const lineWidth = ref(2)
 const lineColor = ref('black')
 const lineOpacity = ref(20)
-// 移除了嵌入文字相关的变量
 
 // 颜色选项
 const colorOptions = COLOR_OPTIONS
@@ -186,8 +178,6 @@ const patternStyle = computed(() => {
     opacity: lineOpacity.value / 100
   }
 })
-
-// 移除了嵌入文字相关的计算属性
 
 // === 方法 ===
 // 获取图案SVG
@@ -266,20 +256,30 @@ watch([
 
 .pattern-cell {
   position: relative;
-  border: 1px solid #bcbcbc;
-  overflow: hidden; /* 确保内容不会溢出单元格 */
-  padding: 4px; /* 添加内边距提供一些间距 */
+  border: 1px solid #d8d8d8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* 使用box-shadow作为备份边框，在打印时也能显示 */
+  box-shadow: 0 0 0 1px #bcbcbc;
 }
 
 .pattern {
   width: 100%;
   height: 100%;
-  /* 移除绝对定位和flex居中，使用默认布局 */
-  /* 这样可以保持原始SVG的布局，而不强制所有图案居中 */
-  display: block;
+  /* 增强居中效果 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* 移除了嵌入文字相关的样式 */
+/* 确保SVG图形居中显示 */
+.pattern svg {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  margin: auto;
+}
 
 .empty-state {
   display: flex;
@@ -353,9 +353,24 @@ watch([
   height: 100%;
 }
 
+/* 打印样式优化 */
 @media print {
+  .pattern-container {
+    padding: 0;
+  }
+  
   .pattern-cell {
-    border: none;
+    /* 使用更明显的打印边框 */
+    border: 1px solid #d8d8d8 !important;
+    /* 确保边框打印 */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* 确保SVG在打印时也能显示 */
+  .pattern svg {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
 </style>
