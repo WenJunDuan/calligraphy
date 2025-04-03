@@ -1,44 +1,29 @@
 <template>
-    <div class="sheet-page">
-      <AppHeader />
-      
-      <div class="sheet-content">
-        <!-- 字帖预览区域 -->
-        <div class="sheet-preview">
-          <div class="paper" ref="paperRef">
-            <template v-if="formattedText.length > 0">
-              <div 
-                v-for="(line, lineIndex) in formattedText" 
-                :key="`line-${lineIndex}`"
-                class="poetry-line"
-              >
-                <div 
-                  v-for="(char, charIndex) in line" 
-                  :key="`char-${lineIndex}-${charIndex}`"
-                  class="character-cell"
-                  :class="[gridType]"
-                  :style="cellStyle"
-                >
-                  <!-- 顶部拼音 -->
-                  <div v-if="showPinyin && char !== ' ' && char !== '　'" class="pinyin-area">
-                    <small>{{ getPinyin(char) }}</small>
-                  </div>
-                  
-                  <!-- 中间汉字 -->
-                  <div 
-                    v-if="char !== ' ' && char !== '　'"
-                    class="character"
-                    :style="characterStyle"
-                  >
+  <SheetContainer>
+    <!-- 预览区域 -->
+    <template #preview>
+      <div class="preview-container">
+        <div class="a4-paper" ref="paperRef">
+          <!-- 诗词内容 -->
+          <div class="poetry-content" :class="{ 'vertical-layout': layoutType === 'vertical' }">
+            <!-- 按行或列渲染内容 -->
+            <template v-if="formattedLines.length > 0">
+              <div v-for="(line, lineIndex) in formattedLines" :key="`line-${lineIndex}`" class="poetry-line"
+                :style="lineStyle">
+                <div v-for="(char, charIndex) in line" :key="`char-${lineIndex}-${charIndex}`" class="character-cell"
+                  :style="cellStyle">
+                  <!-- 背景网格 -->
+                  <div v-if="char !== ' ' && char !== '　'" class="grid-background" :class="gridType"></div>
+
+                  <!-- 描红字符 -->
+                  <div v-if="char !== ' ' && char !== '　'" class="character-guide" :style="guideStyle">
                     {{ char }}
                   </div>
-                  
-                  <!-- 背景网格 -->
-                  <div 
-                    v-if="char !== ' ' && char !== '　'"
-                    class="grid-background"
-                    :class="gridType"
-                  ></div>
+
+                  <!-- 参考字符 -->
+                  <div v-if="char !== ' ' && char !== '　'" class="character-reference" :style="characterStyle">
+                    {{ char }}
+                  </div>
                 </div>
               </div>
             </template>
@@ -47,440 +32,432 @@
             </div>
           </div>
         </div>
-        
-        <!-- 控制面板 -->
-        <div class="control-panel">
-          <div class="panel-actions">
-            <n-button class="export-btn">导出</n-button>
-            <n-button type="primary" class="print-btn">打印</n-button>
-          </div>
-          
-          <div class="panel-section">
-            <n-input
-              v-model:value="inputText"
-              type="textarea"
-              placeholder="输入要练习的诗词"
-              :autosize="{ minRows: 4, maxRows: 10 }"
-              class="text-input"
-            />
-          </div>
-          
-          <div class="panel-section">
-            <div class="toggle-group">
-              <div class="toggle-item">
-                <span class="toggle-label">显示拼音</span>
-                <n-switch v-model:value="showPinyin" />
-              </div>
-              
-              <div class="toggle-item">
-                <span class="toggle-label">显示笔画</span>
-                <n-switch v-model:value="showStrokes" />
-              </div>
-              
-              <div class="toggle-item">
-                <span class="toggle-label">嵌入文字</span>
-                <n-switch v-model:value="embedText" />
-              </div>
-            </div>
-          </div>
-          
-          <div class="panel-section">
-            <div class="setting-item">
-              <div class="setting-label">中文字体</div>
-              <n-select v-model:value="fontFamily" :options="fontOptions" />
-            </div>
-            
-            <div class="setting-item">
-              <div class="setting-label">方格类型</div>
-              <n-select v-model:value="gridType" :options="gridOptions" />
-            </div>
-            
-            <div class="setting-item">
-              <div class="setting-label">方格大小</div>
-              <n-slider v-model:value="gridSize" :min="32" :max="80" :step="4" />
-              <div class="setting-value">{{ gridSize }}px</div>
-            </div>
-            
-            <div class="setting-item">
-              <div class="setting-label">字体大小</div>
-              <n-slider v-model:value="fontSize" :min="40" :max="100" :step="5" />
-              <div class="setting-value">{{ fontSize }}%</div>
-            </div>
-            
-            <div class="setting-item">
-              <div class="setting-label">上下位置</div>
-              <n-slider v-model:value="verticalOffset" :min="-10" :max="10" />
-              <div class="setting-value">{{ verticalOffset }}px</div>
-            </div>
-            
-            <div class="setting-item">
-              <div class="setting-label">字体颜色</div>
-              <n-select v-model:value="fontColor" :options="colorOptions" />
-            </div>
-            
-            <div class="setting-item">
-              <div class="setting-label">描红颜色</div>
-              <n-select v-model:value="strokeColor" :options="colorOptions" />
-            </div>
-            
-            <div class="setting-item">
-              <div class="setting-label">描红透明度</div>
-              <n-slider v-model:value="strokeOpacity" :min="0" :max="100" />
-              <div class="setting-value">{{ strokeOpacity }}</div>
-            </div>
-          </div>
-        </div>
       </div>
-    </div>
-  </template>
-  
-  <script setup lang="ts">
-  import { ref, computed, watch } from 'vue'
-  import { NButton, NInput, NSelect, NSlider, NSwitch } from 'naive-ui'
-  import AppHeader from '@/components/AppHeader.vue'
-  import { useSheetStore } from '@/stores/sheet'
-  import { useFontsStore } from '@/stores/fonts'
-  import { PinyinService } from '@/services/pinyinService'
-  
-  // 存储引用
-  const sheetStore = useSheetStore()
-  const fontsStore = useFontsStore()
-  const paperRef = ref(null)
-  
-  // 输入文本
-  const inputText = ref('')
-  const formattedText = computed(() => {
-    if (!inputText.value) return []
-    
-    // 按行分割
-    const lines = inputText.value.split('\n')
-    
-    // 处理每行
-    return lines.map(line => {
-      // 处理标点符号
-      return formatLine(line)
-    })
-  })
-  
-  // 格式化行文本（处理标点符号和空格）
-  function formatLine(line: string): string[] {
-    const result: string[] = []
-    const chars = Array.from(line)
-    
-    // 中文标点符号处理
-    for (const char of chars) {
-      result.push(char)
-      
-      // 在某些标点符号后添加空格
-      if ([',', '，', '。', '；', '、', '：'].includes(char)) {
-        // 不添加空格，仅处理标点符号
+    </template>
+
+    <!-- 控制面板 -->
+    <template #control-panel>
+      <ControlPanel @print="handlePrint" @export="handleExport">
+        <!-- 输入区域 -->
+        <div class="panel-section">
+          <n-input v-model:value="inputText" type="textarea" placeholder="输入要练习的诗词"
+            :autosize="{ minRows: 4, maxRows: 8 }" class="poetry-input" />
+        </div>
+
+        <!-- 布局设置 -->
+        <div class="panel-section">
+          <h3 class="section-title">布局设置</h3>
+
+          <SettingItem label="排版方式">
+            <n-select v-model:value="layoutType" :options="LAYOUT_OPTIONS" />
+          </SettingItem>
+
+          <SettingItem label="格子类型">
+            <n-select v-model:value="gridType" :options="GRID_OPTIONS" />
+          </SettingItem>
+
+          <SettingItem label="方格大小">
+            <n-slider v-model:value="gridSize" :min="32" :max="80" :step="4" />
+            <template #value>{{ gridSize }}px</template>
+          </SettingItem>
+        </div>
+
+        <!-- 字体设置 -->
+        <div class="panel-section">
+          <h3 class="section-title">字体设置</h3>
+
+          <SettingItem label="字体类型">
+            <n-select v-model:value="fontFamily" :options="fontsStore.fontOptions" />
+          </SettingItem>
+
+          <SettingItem label="字体大小">
+            <n-slider v-model:value="fontSize" :min="40" :max="100" :step="5" />
+            <template #value>{{ fontSize }}%</template>
+          </SettingItem>
+        </div>
+
+        <!-- 描红样式 -->
+        <div class="panel-section">
+          <h3 class="section-title">描红样式</h3>
+
+          <SettingItem label="描红颜色">
+            <n-select v-model:value="guideColor" :options="COLOR_OPTIONS" />
+          </SettingItem>
+
+          <SettingItem label="描红透明度">
+            <n-slider v-model:value="guideOpacity" :min="0" :max="100" />
+            <template #value>{{ guideOpacity }}%</template>
+          </SettingItem>
+        </div>
+      </ControlPanel>
+    </template>
+  </SheetContainer>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue'
+import { NInput, NSelect, NSlider } from 'naive-ui'
+import SheetContainer from '@/components/SheetContainer.vue'
+import ControlPanel from '@/components/ControlPanel.vue'
+import SettingItem from '@/components/SettingItem.vue'
+import { useSheetStore, useSettingsStore, useFontsStore } from '@/stores'
+import { LayoutType, GridType } from '@/types'
+import { GRID_OPTIONS, LAYOUT_OPTIONS, COLOR_OPTIONS, A4_DIMENSIONS } from '@/constants'
+import { printContent, exportAsPDF } from '@/utils/printer'
+
+// 页面常量
+const A4_WIDTH = A4_DIMENSIONS.WIDTH_PX     // A4宽度 (795px)
+const A4_HEIGHT = A4_DIMENSIONS.HEIGHT_PX    // A4高度 (1123px)
+const PAGE_MARGIN = 30                      // 统一页面边距
+
+// 组件引用
+const paperRef = ref<HTMLElement | null>(null)
+
+// 存储引用
+const sheetStore = useSheetStore()
+const settingsStore = useSettingsStore()
+const fontsStore = useFontsStore()
+
+// 输入文本
+const inputText = ref('')
+
+// 布局设置
+const layoutType = ref<LayoutType>('vertical') // 默认竖排
+const gridType = ref<GridType>('fang')         // 默认方格
+const gridSize = ref(48)                       // 默认方格大小
+
+// 字体设置
+const fontFamily = ref('楷体, KaiTi, STKaiti, serif')
+const fontSize = ref(80)
+
+// 描红设置
+const guideColor = ref('red')                 // 描红颜色
+const guideOpacity = ref(30)                  // 描红透明度 (百分比)
+
+// 格式化诗词 - 计算每行字符并自动换行
+const formattedLines = computed(() => {
+  if (!inputText.value) return []
+
+  // 按行分割
+  const lines = inputText.value.split('\n')
+  const result = []
+
+  // 计算A4纸内容区有效宽度和高度
+  const contentWidth = A4_WIDTH - (PAGE_MARGIN * 2)
+  const contentHeight = A4_HEIGHT - (PAGE_MARGIN * 2)
+
+  // 计算每行/列能容纳的字符数量
+  const charsPerRow = layoutType.value === 'vertical'
+    ? Math.floor(contentHeight / gridSize.value) // 竖排模式下一列可容纳的字符数
+    : Math.floor(contentWidth / gridSize.value)  // 横排模式下一行可容纳的字符数
+
+  // 处理每行文本
+  lines.forEach(line => {
+    if (!line.trim()) return // 跳过空行
+
+    const chars = Array.from(line.trim())
+
+    if (layoutType.value === 'vertical') {
+      // 竖排模式 - 每一列是一个数组
+      for (let i = 0; i < chars.length; i += charsPerRow) {
+        const columnChars = chars.slice(i, i + charsPerRow)
+        if (columnChars.length > 0) {
+          result.push(columnChars)
+        }
+      }
+    } else {
+      // 横排模式 - 自动换行
+      for (let i = 0; i < chars.length; i += charsPerRow) {
+        const rowChars = chars.slice(i, i + charsPerRow)
+        if (rowChars.length > 0) {
+          result.push(rowChars)
+        }
       }
     }
-    
-    return result
-  }
-  
-  // 字帖设置
-  const showPinyin = ref(true)
-  const showStrokes = ref(true)
-  const embedText = ref(false)
-  const gridType = ref('tian') // tian, mi, hui
-  const gridSize = ref(48) // 诗词字体默认小一些
-  const fontSize = ref(80)
-  const verticalOffset = ref(0)
-  const fontFamily = ref('楷体')
-  const fontColor = ref('black')
-  const strokeColor = ref('lightgray')
-  const strokeOpacity = ref(10)
-  
-  // 拼音缓存
-  const pinyinCache = ref<Record<string, string>>({})
-  
-  // 选项
-  const gridOptions = [
-    { label: '田字格', value: 'tian' },
-    { label: '米字格', value: 'mi' },
-    { label: '回宫格', value: 'hui' }
-  ]
-  
-  const fontOptions = computed(() => {
-    return fontsStore.allFonts.map(font => ({
-      label: font.name,
-      value: font.family
-    }))
   })
-  
-  const colorOptions = [
-    { label: '淡灰', value: 'lightgray' },
-    { label: '中灰', value: 'gray' },
-    { label: '黑色', value: 'black' },
-    { label: '红色', value: 'red' },
-    { label: '蓝色', value: 'blue' }
-  ]
-  
-  // 计算样式
-  const cellStyle = computed(() => {
-    return {
-      width: `${gridSize.value}px`,
-      height: `${gridSize.value}px`
+
+  return result
+})
+
+// 计算样式
+// A4纸样式
+const paperStyle = computed(() => ({
+  width: `${A4_WIDTH}px`,
+  height: `${A4_HEIGHT}px`,
+  padding: `${PAGE_MARGIN}px`,
+  boxSizing: 'border-box',
+  backgroundColor: 'white',
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+  position: 'relative',
+  overflow: 'hidden'
+}))
+
+// 行样式
+const lineStyle = computed(() => ({
+  display: 'flex',
+  flexDirection: layoutType.value === 'vertical' ? 'column' : 'row',
+  margin: '0'
+}))
+
+// 单元格样式
+const cellStyle = computed(() => ({
+  width: `${gridSize.value}px`,
+  height: `${gridSize.value}px`,
+  position: 'relative',
+  margin: '0'
+}))
+
+// 字符样式
+const characterStyle = computed(() => ({
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  fontSize: `${fontSize.value * gridSize.value / 100}px`,
+  fontFamily: fontFamily.value,
+  color: 'black',
+  zIndex: 3,
+  userSelect: 'none'
+}))
+
+// 描红样式
+const guideStyle = computed(() => ({
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  fontSize: `${fontSize.value * gridSize.value / 100}px`,
+  fontFamily: fontFamily.value,
+  color: guideColor.value,
+  opacity: guideOpacity.value / 100,
+  zIndex: 2,
+  userSelect: 'none',
+  pointerEvents: 'none'
+}))
+
+// 打印和导出方法
+function handlePrint() {
+  if (!paperRef.value) return
+
+  printContent({
+    title: '诗词字帖',
+    content: paperRef.value,
+    callback: () => {
+      console.log('打印完成')
     }
   })
-  
-  const characterStyle = computed(() => {
-    return {
-      fontFamily: fontFamily.value,
-      fontSize: `${fontSize.value * gridSize.value / 100}px`,
-      color: fontColor.value,
-      transform: `translateY(${verticalOffset.value}px)`
+}
+
+function handleExport() {
+  if (!paperRef.value) return
+
+  exportAsPDF('诗词字帖', paperRef.value)
+}
+
+// 从Store加载设置
+function loadFromStore() {
+  const settings = sheetStore.settings
+
+  if (settings) {
+    // 布局设置
+    gridType.value = settings.gridType || 'fang'
+    gridSize.value = settings.gridSize || 48
+
+    // 字体设置
+    fontFamily.value = settings.fontFamily || '楷体, KaiTi, STKaiti, serif'
+    fontSize.value = settings.fontSize || 80
+
+    // 描红设置
+    guideColor.value = settings.guideColor || 'red'
+    guideOpacity.value = settings.guideOpacity || 30
+
+    // 诗词特有设置，从本地存储中恢复
+    const poetrySettings = localStorage.getItem('poetry-settings')
+    if (poetrySettings) {
+      try {
+        const parsed = JSON.parse(poetrySettings)
+        layoutType.value = parsed.layoutType || 'vertical'
+      } catch (e) {
+        console.error('Error parsing poetry settings:', e)
+      }
     }
-  })
-  
-  // 获取拼音
-  function getPinyin(char: string): string {
-    // 检查缓存
-    if (pinyinCache.value[char]) {
-      return pinyinCache.value[char]
-    }
-    
-    try {
-      // 使用拼音服务获取拼音
-      const pinyinData = PinyinService.getPinyinData(char)
-      const pinyin = pinyinData?.pinyinWithTone || ''
-      
-      // 存入缓存
-      pinyinCache.value[char] = pinyin
-      
-      return pinyin
-    } catch (error) {
-      console.error(`获取"${char}"的拼音失败:`, error)
-      return ''
-    }
-  }
-  
-  // 加载状态从Store
-  function loadFromStore() {
-    const settings = sheetStore.settings
-    
-    // 只有当store中有值时才加载
-    if (settings) {
-      gridType.value = settings.gridType || 'tian'
-      fontFamily.value = settings.fontFamily || '楷体'
-      gridSize.value = settings.gridSize || 48 // 诗词默认小一些
-      fontSize.value = settings.fontSize || 80
-      fontColor.value = settings.fontColor || 'black'
-      strokeColor.value = settings.guideColor || 'lightgray'
-      strokeOpacity.value = settings.guideOpacity || 10
-      verticalOffset.value = settings.verticalOffset || 0
-      showPinyin.value = settings.showPinyin !== undefined ? settings.showPinyin : true
-      showStrokes.value = settings.showGuides !== undefined ? settings.showGuides : true
-      embedText.value = settings.enableInput !== undefined ? settings.enableInput : false
-    }
-    
-    // 加载上次输入的文本
+
+    // 之前输入的文本
     if (sheetStore.inputText) {
       inputText.value = sheetStore.inputText
     }
   }
-  
-  // 保存状态到Store
-  watch([gridType, fontFamily, gridSize, fontSize, fontColor, strokeColor, strokeOpacity, verticalOffset, showPinyin, showStrokes, embedText], () => {
-    sheetStore.updateSettings({
-      gridType: gridType.value,
-      fontFamily: fontFamily.value,
-      gridSize: gridSize.value,
-      fontSize: fontSize.value,
-      fontColor: fontColor.value,
-      guideColor: strokeColor.value,
-      guideOpacity: strokeOpacity.value,
-      verticalOffset: verticalOffset.value,
-      showReference: showPinyin.value,
-      showGuides: showStrokes.value,
-      enableInput: embedText.value,
-      showPinyin: showPinyin.value,
-      withTone: true,
-      pinyinFontSize: 40,
-      pinyinColor: '#666666'
-    })
+}
+
+// 保存设置到Store和localStorage
+watch([
+  layoutType, gridType, gridSize,
+  fontFamily, fontSize,
+  guideColor, guideOpacity
+], () => {
+  // 保存通用设置到SheetStore
+  sheetStore.updateSettings({
+    gridType: gridType.value,
+    gridSize: gridSize.value,
+    fontFamily: fontFamily.value,
+    fontSize: fontSize.value,
+    fontColor: 'black',
+    showGuides: true,
+    guideColor: guideColor.value,
+    guideOpacity: guideOpacity.value,
   })
-  
-  // 保存输入文本
-  watch(inputText, (newText) => {
-    if (newText) {
-      sheetStore.setInputText(newText)
-    }
-  })
-  
-  // 初始化加载
+
+  // 保存诗词特有设置到localStorage
+  const poetrySettings = {
+    layoutType: layoutType.value,
+  }
+
+  localStorage.setItem('poetry-settings', JSON.stringify(poetrySettings))
+})
+
+// 保存输入文本
+watch(inputText, (newText) => {
+  if (newText) {
+    sheetStore.setInputText(newText)
+  }
+})
+
+// 初始化
+onMounted(() => {
   loadFromStore()
-  </script>
-  
-  <style scoped>
-  .sheet-page {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background-color: #f5f7fa;
-  }
-  
-  .sheet-content {
-    display: flex;
-    flex: 1;
-    padding: 16px;
-    gap: 16px;
-    max-width: 1400px;
-    margin: 0 auto;
-    width: 100%;
-  }
-  
-  .sheet-preview {
-    flex: 1;
-    background-color: #eef1f5;
-    border-radius: 8px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    overflow: auto;
-  }
-  
-  .paper {
+
+  // 记录A4尺寸和容量信息
+  const contentWidth = A4_WIDTH - (PAGE_MARGIN * 2)
+  const contentHeight = A4_HEIGHT - (PAGE_MARGIN * 2)
+
+  const charsPerRow = Math.floor(contentWidth / gridSize.value)
+  const charsPerColumn = Math.floor(contentHeight / gridSize.value)
+
+})
+</script>
+
+<style scoped>
+/* 预览容器 */
+.preview-container {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background-color: #f5f7fa;
+  border-radius: 8px;
+}
+
+/* A4纸样式 */
+.a4-paper {
+  width: v-bind('A4_WIDTH + "px"');
+  height: v-bind('A4_HEIGHT + "px"');
+  padding: v-bind('PAGE_MARGIN + "px"');
+  box-sizing: border-box;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  margin: 0 auto;
+}
+
+/* 诗词内容容器 */
+.poetry-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  width: 100%;
+  height: 100%;
+}
+
+/* 竖向布局 */
+.poetry-content.vertical-layout {
+  flex-direction: row-reverse;
+  /* 从右向左排列 */
+}
+
+/* 诗词行 */
+.poetry-line {
+  display: flex;
+}
+
+/* 字符单元格 */
+.character-cell {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 网格背景 */
+.grid-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* 描红字符 */
+.character-guide {
+  position: absolute;
+  z-index: 2;
+}
+
+/* 参考字符 */
+.character-reference {
+  position: absolute;
+  z-index: 3;
+}
+
+/* 空状态提示 */
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  color: #aaa;
+  font-size: 16px;
+}
+
+.panel-section {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.poetry-input {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+/* 打印样式优化 */
+@media print {
+  .preview-container {
+    padding: 0;
     background-color: white;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    padding: 24px;
-    width: 100%;
-    min-height: 800px;
   }
-  
-  .poetry-line {
-    display: flex;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
+
+  .a4-paper {
+    box-shadow: none;
+    width: 210mm;
+    height: 297mm;
   }
-  
-  .character-cell {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 2px;
+
+  .character-cell,
+  .grid-background,
+  .character-guide,
+  .character-reference {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
-  
-  .pinyin-area {
-    position: absolute;
-    top: 5%;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    color: #666;
-    font-size: 12px;
-    z-index: 2;
-  }
-  
-  .character {
-    position: relative;
-    z-index: 1;
-    user-select: none;
-  }
-  
-  .grid-background {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-  }
-  
-  .empty-state {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    min-height: 300px;
-    color: #aaa;
-    font-size: 16px;
-  }
-  
-  .control-panel {
-    width: 300px;
-    background-color: white;
-    border-radius: 8px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .panel-actions {
-    display: flex;
-    gap: 8px;
-  }
-  
-  .export-btn, .print-btn {
-    flex: 1;
-  }
-  
-  .panel-section {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .text-input {
-    width: 100%;
-  }
-  
-  .toggle-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .toggle-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .toggle-label {
-    font-size: 14px;
-    color: #333;
-  }
-  
-  .setting-item {
-    margin-bottom: 16px;
-  }
-  
-  .setting-label {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 8px;
-  }
-  
-  .setting-value {
-    text-align: right;
-    font-size: 12px;
-    color: #999;
-    margin-top: 4px;
-  }
-  
-  @media print {
-    .app-header, .control-panel {
-      display: none;
-    }
-    
-    .sheet-content {
-      padding: 0;
-    }
-    
-    .sheet-preview {
-      overflow: visible;
-      background-color: white;
-      padding: 0;
-    }
-    
-    .paper {
-      box-shadow: none;
-      min-height: auto;
-    }
-  }
-  </style>
+}
+</style>
