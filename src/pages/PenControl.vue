@@ -7,13 +7,24 @@
           <div class="pattern-container">
             <template v-if="selectedPatterns.length > 0">
               <!-- 每行练习图案 -->
-              <div v-for="(patternId, rowIndex) in selectedPatterns" :key="`row-${pageIndex}-${rowIndex}`"
-                class="pattern-row">
-                <div v-for="colIndex in repeatCount" :key="`cell-${pageIndex}-${rowIndex}-${colIndex}`"
-                  class="pattern-cell" :style="cellStyle"
-                  :class="{ 'grid-background': showGridBackground, [gridType]: showGridBackground }">
+              <div 
+                v-for="(patternId, rowIndex) in selectedPatterns" 
+                :key="`row-${pageIndex}-${rowIndex}`"
+                class="pattern-row"
+              >
+                <div 
+                  v-for="colIndex in repeatCount" 
+                  :key="`cell-${pageIndex}-${rowIndex}-${colIndex}`"
+                  class="pattern-cell"
+                  :style="cellStyle"
+                  :class="{ 'grid-background': showGridBackground, [gridType]: showGridBackground }"
+                >
                   <!-- 使用v-html插入SVG图案 -->
-                  <div class="pattern" v-html="getPatternSvg(patternId)" :style="patternStyle"></div>
+                  <div 
+                    class="pattern"
+                    v-html="getPatternSvg(patternId)"
+                    :style="patternStyle"
+                  ></div>
                 </div>
               </div>
             </template>
@@ -36,71 +47,81 @@
             <div class="pattern-group">
               <h4 class="group-title">基础图案</h4>
               <div class="pattern-items">
-                <div v-for="(pattern, index) in patternGroups.basic" :key="`basic-${index}`" class="pattern-item"
-                  :class="{ active: selectedPatterns.includes(pattern.id) }" @click="togglePattern(pattern.id)"
-                  v-html="pattern.svg"></div>
+                <div 
+                  v-for="(pattern, index) in patternGroups.basic"
+                  :key="`basic-${index}`"
+                  class="pattern-item"
+                  :class="{ active: selectedPatterns.includes(pattern.id) }"
+                  @click="togglePattern(pattern.id)"
+                  v-html="pattern.svg"
+                ></div>
               </div>
             </div>
-
+            
             <!-- 曲线图案 -->
             <div class="pattern-group">
               <h4 class="group-title">曲线图案</h4>
               <div class="pattern-items">
-                <div v-for="(pattern, index) in patternGroups.curves" :key="`curve-${index}`" class="pattern-item"
-                  :class="{ active: selectedPatterns.includes(pattern.id) }" @click="togglePattern(pattern.id)"
-                  v-html="pattern.svg"></div>
+                <div 
+                  v-for="(pattern, index) in patternGroups.curves"
+                  :key="`curve-${index}`"
+                  class="pattern-item"
+                  :class="{ active: selectedPatterns.includes(pattern.id) }"
+                  @click="togglePattern(pattern.id)"
+                  v-html="pattern.svg"
+                ></div>
               </div>
             </div>
-
+            
             <!-- 复杂图案 -->
             <div class="pattern-group">
               <h4 class="group-title">复杂图案</h4>
               <div class="pattern-items">
-                <div v-for="(pattern, index) in patternGroups.complex" :key="`complex-${index}`" class="pattern-item"
-                  :class="{ active: selectedPatterns.includes(pattern.id) }" @click="togglePattern(pattern.id)"
-                  v-html="pattern.svg"></div>
+                <div 
+                  v-for="(pattern, index) in patternGroups.complex"
+                  :key="`complex-${index}`"
+                  class="pattern-item"
+                  :class="{ active: selectedPatterns.includes(pattern.id) }"
+                  @click="togglePattern(pattern.id)"
+                  v-html="pattern.svg"
+                ></div>
               </div>
             </div>
           </div>
         </div>
-
+        
         <!-- 设置部分 -->
         <div class="panel-section">
           <h3 class="section-title">练习设置</h3>
-
+          
           <SettingItem label="重复练习">
             <n-slider v-model:value="repeatCount" :min="5" :max="24" :step="1" />
             <template #value>{{ repeatCount }}次</template>
           </SettingItem>
-
+          
           <SettingItem label="图案大小">
             <n-slider v-model:value="patternSize" :min="32" :max="80" :step="4" />
             <template #value>{{ patternSize }}px</template>
           </SettingItem>
-
+          
           <SettingItem label="线条粗细">
             <n-slider v-model:value="lineWidth" :min="1" :max="5" :step="0.5" />
             <template #value>{{ lineWidth }}px</template>
           </SettingItem>
-
+          
           <SettingItem label="线条颜色">
             <n-select v-model:value="lineColor" :options="colorOptions" />
           </SettingItem>
-
+          
           <SettingItem label="透明度">
             <n-slider v-model:value="lineOpacity" :min="0" :max="100" />
             <template #value>{{ lineOpacity }}%</template>
           </SettingItem>
-
-          <!-- 新增方框背景设置 -->
-          <ToggleSetting label="显示背景格" :modelValue="showGridBackground"
-            @update:modelValue="showGridBackground = $event" />
-
-          <template v-if="showGridBackground">
-            <SettingItem label="格子类型">
-              <n-select v-model:value="gridType" :options="gridTypeOptions" />
-            </SettingItem>
-          </template>
+          
+          <!-- 背景格设置 -->
+          <SettingItem label="格子类型">
+            <n-select v-model:value="gridType" :options="gridTypeOptions" />
+          </SettingItem>
         </div>
       </ControlPanel>
     </template>
@@ -114,7 +135,7 @@ import SheetContainer from '@/components/SheetContainer.vue'
 import SheetPreview from '@/components/SheetPreview.vue'
 import ControlPanel from '@/components/ControlPanel.vue'
 import SettingItem from '@/components/SettingItem.vue'
-import ToggleSetting from '@/components/ToggleSetting.vue'
+// 移除不需要的ToggleSetting组件导入
 import { PRACTICE_PATTERNS, COLOR_OPTIONS, GRID_OPTIONS } from '@/constants'
 import { useSettingsStore } from '@/stores'
 import { printContent, exportAsPDF } from '@/utils/printer'
@@ -122,6 +143,7 @@ import { generatePatternSVG } from '@/utils/strokeGen'
 
 // 存储引用
 const previewRef = ref(null)
+const settingsStore = useSettingsStore()
 
 // 图案组
 const patternGroups = {
@@ -140,9 +162,9 @@ const lineWidth = ref(2)     // 2px
 const lineColor = ref('red') // 红色
 const lineOpacity = ref(60)  // 60%
 
-// 新增方框背景设置
-const showGridBackground = ref(false)
-const gridType = ref('tian')
+// 背景格设置 - 默认开启，使用方格
+const showGridBackground = ref(true)
+const gridType = ref('fang')
 const gridTypeOptions = GRID_OPTIONS
 
 // 颜色选项
@@ -175,9 +197,9 @@ function getPatternSvg(id: string): string {
   // 从所有图案中查找
   const allPatterns = [...patternGroups.basic, ...patternGroups.curves, ...patternGroups.complex]
   const pattern = allPatterns.find(p => p.id === id)
-
+  
   if (!pattern) return ''
-
+  
   // 使用strokeGen工具生成SVG，添加线宽设置
   return generatePatternSVG(id, {
     width: patternSize.value,
@@ -204,7 +226,7 @@ function togglePattern(id: string) {
 // 导出与打印功能
 function handlePrint() {
   if (!previewRef.value) return
-
+  
   printContent({
     title: '控笔练习',
     content: previewRef.value.previewContainerRef,
@@ -216,13 +238,13 @@ function handlePrint() {
 
 function handleExport() {
   if (!previewRef.value) return
-
+  
   exportAsPDF('控笔练习', previewRef.value.previewContainerRef)
 }
 
 // 监听设置变化，可以添加持久化保存的逻辑
 watch([
-  selectedPatterns, repeatCount, patternSize,
+  selectedPatterns, repeatCount, patternSize, 
   lineWidth, lineColor, lineOpacity,
   showGridBackground, gridType
 ], () => {
@@ -247,7 +269,7 @@ watch([
 
 .pattern-cell {
   position: relative;
-  border: 1px solid rgb(202, 202, 202);
+  /* border: 1px solid #d8d8d8; */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -260,8 +282,7 @@ watch([
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2;
-  /* 确保图案显示在背景网格之上 */
+  z-index: 2; /* 确保图案显示在背景网格之上 */
   position: relative;
 }
 
@@ -287,10 +308,8 @@ watch([
   bottom: 0;
   z-index: 1;
   background-size: 100% 100%;
-  opacity: 0.3;
-  /* 降低背景透明度以便更好地看到图案 */
+  opacity: 0.3; /* 降低背景透明度以便更好地看到图案 */
 }
-
 .empty-state {
   display: flex;
   justify-content: center;
@@ -363,34 +382,23 @@ watch([
   height: 100%;
 }
 
-.setting-item {
-  margin-top: 10px;
-}
-
-.toggle-item {
-  span .toggle-label {
-    padding-right: 20px !important;
-  }
-}
-
-
 /* 打印样式优化 */
 @media print {
   .pattern-container {
     padding: 0;
   }
-
+  
   .pattern-cell {
-    border: 1px solid #a3a2a2 !important;
+    /* border: 1px solid #d8d8d8 !important; */
     print-color-adjust: exact;
   }
-
+  
   /* 确保SVG在打印时也能显示 */
   .pattern svg {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-
+  
   /* 确保背景网格在打印时显示 */
   .grid-background::before {
     -webkit-print-color-adjust: exact;
