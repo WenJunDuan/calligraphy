@@ -183,7 +183,6 @@ watch(layoutType, (newValue) => {
 
 // 监听字体变化
 watch(fontFamily, (newValue) => {
-  console.log(`字体已更改为 '${newValue}'`);
   // 从fontFamily中提取字体名称
   const fontFamilies = newValue.split(',').map(name => name.trim());
 
