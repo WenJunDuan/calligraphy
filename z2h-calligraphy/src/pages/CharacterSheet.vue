@@ -211,12 +211,13 @@ const printMarginStyles = computed(() => {
   };
 });
 
-// 计算分页单元格数据
+// 计算分页单元格数据 - 增加 gridSize 参数传递
 const paginatedCells = computed((): CellData[][] => {
   return paginateCharacters({
     characters: characters.value,
     layoutType: layoutType.value,
     charsPerRow: charsPerRow.value,
+    gridSize: gridSize.value, // 传入当前网格大小
     printSettings: settingsStore.printSettings
   });
 });
@@ -355,7 +356,6 @@ onMounted(() => {
   display: flex;
   flex: 1;
   padding: 12px;
-  /* Reduce padding from 16px */
   gap: 16px;
   max-width: 1144px;
   margin: 0 auto;
@@ -374,14 +374,18 @@ onMounted(() => {
   /* Center pages horizontally */
   overflow: auto;
   gap: 20px;
-  /* Space between pages */
+}
+
+.page {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 .paper {
   display: flex;
   justify-content: center;
   margin: 0 auto;
-  /* Center paper horizontally if preview area is wider */
 }
 
 .character-grid {
@@ -416,6 +420,10 @@ onMounted(() => {
 .character {
   z-index: 1;
   user-select: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .grid-background {
@@ -452,6 +460,8 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow-y: auto;
+  max-height: calc(100vh - 150px);
 }
 
 .text-input {
@@ -524,7 +534,8 @@ onMounted(() => {
   }
 
   .app-header,
-  .control-panel {
+  .control-panel,
+  .app-footer {
     display: none;
   }
 
@@ -566,6 +577,8 @@ onMounted(() => {
     /* Prevent content spill */
     background-color: transparent;
     /* Ensure no background interfere */
+    margin-bottom: 0;
+    /* Remove margin in print view */
   }
 
   .paper {
