@@ -1,9 +1,13 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { fileURLToPath, URL } from 'node:url'
+import { dirname, resolve } from 'path'
+import { fileURLToPath } from 'url'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
+
+// 获取当前文件的目录
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -43,28 +47,23 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': resolve(__dirname, 'src')
     }
   },
   build: {
-    // 优化打包配置
-    target: 'esnext', // 为Bun优化输出
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
-    // 拆分代码块
+    // 使用esbuild替代terser，避免依赖问题
+    minify: 'esbuild',
+    // 为Bun优化输出
+    target: 'esnext',
+    // 简化分块策略，减少空块问题
     rollupOptions: {
       output: {
         manualChunks: {
           'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          'naive-ui-vendor': ['naive-ui'],
-          'libs': ['@vueuse/core'],
-          'cnchar': ['cnchar', 'cnchar-draw', 'cnchar-order', 'cnchar-poly', 'cnchar-trad'],
-          'pinyin': ['pinyin-pro']
+          'ui-vendor': ['naive-ui'],
+          'utils': ['@vueuse/core'],
+          // 合并中文处理相关库
+          'chinese-utils': ['cnchar', 'cnchar-draw', 'cnchar-order', 'cnchar-poly', 'cnchar-trad', 'pinyin-pro']
         }
       }
     },
@@ -72,6 +71,8 @@ export default defineConfig({
     cssCodeSplit: true,
     // 设置最大资源内联阈值
     assetsInlineLimit: 4096,
+    // 禁用sourcemap以减小构建大小
+    sourcemap: false
   },
   // 开发服务器配置
   server: {
@@ -79,9 +80,8 @@ export default defineConfig({
     open: true,
     cors: true,
   },
-  // Bun优化配置
+  // Bun特定优化
   optimizeDeps: {
-    // Bun已经很快了，可以减少预构建优化
     esbuildOptions: {
       target: 'esnext'
     }

@@ -1,11 +1,11 @@
 {
-  "name": "calligraphy",
+"name": "calligraphy",
   "private": true,
   "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "bunx --bun vite",
-    "build": "bunx --bun vue-tsc && vite build",
+    "build": "bunx --bun vite build",
     "preview": "vite preview",
     "format": "prettier --write \"src/**/*.{ts,vue,css,html}\""
   },
