@@ -1,7 +1,7 @@
 /**
  * 应用常量定义中心
  */
-import { OptionItem, GridType } from '@/types';
+import { OptionItem, GridType } from '@/types'
 
 // ======== UI选项常量 ========
 
@@ -10,12 +10,12 @@ import { OptionItem, GridType } from '@/types';
  */
 export const FONT_OPTIONS: OptionItem[] = [
   { label: '楷体', value: '楷体, KaiTi, STKaiti, serif' },
-  { label: '行书', value: '行书, Xingkai SC, serif' },
   { label: '隶书', value: '隶书, LiSu, STLiti, serif' },
-  { label: '瘦金体', value: '瘦金体, Shoujin Ti, serif' },
+  { label: '汉仪瘦金体', value: '汉仪瘦金体, HanYiShouJin, serif' },
+  { label: '加粗瘦金体', value: '加粗瘦金体, ShouJinJiaCu, serif' },
   { label: '田英章楷书', value: '田英章楷书, Tian Yingzhang KaiShu, serif' },
   { label: '吴玉生行书', value: '吴玉生行书, Wu Yushuang Xingshu, serif' }
-];
+]
 
 /**
  * 网格类型选项
@@ -28,7 +28,7 @@ export const GRID_OPTIONS: OptionItem[] = [
   { label: '方格', value: 'fang' },
   { label: '米田格', value: 'mitian' },
   { label: '四线格', value: 'si' }
-];
+]
 
 /**
  * 布局选项
@@ -36,7 +36,7 @@ export const GRID_OPTIONS: OptionItem[] = [
 export const LAYOUT_OPTIONS: OptionItem[] = [
   { label: '网格布局', value: 'grid' },
   { label: '竖排布局', value: 'vertical' }
-];
+]
 
 /**
  * 颜色选项
@@ -45,7 +45,7 @@ export const COLOR_OPTIONS: OptionItem[] = [
   { label: '中灰', value: 'gray' },
   { label: '红色', value: 'red' },
   { label: '蓝色', value: 'blue' }
-];
+]
 
 /**
  * 默认网格样式
@@ -57,14 +57,15 @@ export const DEFAULT_GRID_STYLE = {
   guideColor: '#cccccc',
   guideWidth: 1,
   backgroundColor: 'white'
-};
+}
 
 // ======== 内容常量 ========
 
 /**
  * 常用汉字
  */
-export const COMMON_CHARACTERS = '的一是在了不和有大这中人上为个所我以要他时来用们生到作地于出就分对成会可主发年动同工也能下过子说产种面而方后多定行学法所民得经十三之进着等部';
+export const COMMON_CHARACTERS =
+  '的一是在了不和有大这中人上为个所我以要他时来用们生到作地于出就分对成会可主发年动同工也能下过子说产种面而方后多定行学法所民得经十三之进着等部'
 
 // ======== 布局常量 ========
 
@@ -74,7 +75,7 @@ export const COMMON_CHARACTERS = '的一是在了不和有大这中人上为个�
 export const A4_DIMENSIONS = {
   WIDTH_PX: 795,
   HEIGHT_PX: 1133
-};
+}
 
 /**
  * 控笔练习图案
@@ -134,7 +135,7 @@ export const PRACTICE_PATTERNS = {
       svg: '<svg viewBox="0 0 24 24"><polygon points="12,4 4,20 20,20" stroke="currentColor" stroke-width="2" fill="none"/></svg>'
     }
   ]
-};
+}
 
 // ======== 默认配置 ========
 
@@ -156,7 +157,7 @@ export const DEFAULT_APP_SETTINGS = {
     headerFooter: false,
     scale: 100
   }
-};
+}
 
 /**
  * 默认字帖设置
@@ -181,7 +182,7 @@ export const DEFAULT_SHEET_SETTINGS = {
   layoutType: 'grid',
   isSingleCharMode: true,
   charsPerRow: 10
-};
+}
 
 // ======== 导出便捷方法 ========
 
@@ -189,28 +190,28 @@ export const DEFAULT_SHEET_SETTINGS = {
  * 获取网格类型选项
  */
 export function getGridTypeOptions(): OptionItem[] {
-  return GRID_OPTIONS;
+  return GRID_OPTIONS
 }
 
 /**
  * 获取字体选项
  */
 export function getFontOptions(): OptionItem[] {
-  return FONT_OPTIONS;
+  return FONT_OPTIONS
 }
 
 /**
  * 获取布局选项
  */
 export function getLayoutOptions(): OptionItem[] {
-  return LAYOUT_OPTIONS;
+  return LAYOUT_OPTIONS
 }
 
 /**
  * 获取颜色选项
  */
 export function getColorOptions(): OptionItem[] {
-  return COLOR_OPTIONS;
+  return COLOR_OPTIONS
 }
 
 // 导出所有常量
@@ -229,4 +230,4 @@ export default {
   getFontOptions,
   getLayoutOptions,
   getColorOptions
-};
+}
