@@ -1,5 +1,6 @@
 /nginx
 /doc
+/dist
 /.cursor
 node_modules
 pnpm-lock.yaml

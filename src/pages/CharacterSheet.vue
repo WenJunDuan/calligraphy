@@ -68,7 +68,7 @@
           <div class="setting-item">
             <div class="setting-label">练习字数</div>
             <!-- Dynamically set max based on layout -->
-            <n-slider v-model:value="charsPerRow" :min="2" :max="layoutType === 'vertical' ? 16 : 12" :step="2" />
+            <n-slider v-model:value="charsPerRow" :min="2" :max="layoutType === 'vertical' ? 16 : 20" :step="2" />
             <div class="setting-value">{{ charsPerRow }}个</div>
           </div>
 

@@ -2,25 +2,18 @@
   <SheetContainer>
     <!-- 预览区域 -->
     <template #preview>
-      <div class="preview-container">
-        <div class="a4-paper" ref="paperRef">
-          <!-- 诗词内容 -->
+      <SheetPreview :pages="paginatedContent" ref="previewRef">
+        <template #content="{ pageCells, pageIndex }">
           <div class="poetry-content" :class="{ 'vertical-layout': layoutType === 'vertical' }">
             <!-- 按行或列渲染内容 -->
             <template v-if="formattedLines.length > 0">
-              <div v-for="(line, lineIndex) in formattedLines" :key="`line-${lineIndex}`" class="poetry-line"
-                :style="lineStyle">
-                <div v-for="(char, charIndex) in line" :key="`char-${lineIndex}-${charIndex}`" class="character-cell"
-                  :style="cellStyle">
+              <div v-for="(line, lineIndex) in getPageLines(pageIndex)" :key="`line-${pageIndex}-${lineIndex}`"
+                class="poetry-line" :style="lineStyle">
+                <div v-for="(char, charIndex) in line" :key="`char-${pageIndex}-${lineIndex}-${charIndex}`"
+                  class="character-cell" :style="cellStyle">
                   <!-- 背景网格 -->
                   <div v-if="char !== ' ' && char !== '　'" class="grid-background" :class="gridType"></div>
 
-                  <!-- 描红字符 -->
-                  <div v-if="char !== ' ' && char !== '　'" class="character-guide" :style="guideStyle">
-                    {{ char }}
-                  </div>
-
-                  <!-- 参考字符 -->
                   <div v-if="char !== ' ' && char !== '　'" class="character-reference" :style="characterStyle">
                     {{ char }}
                   </div>
@@ -31,8 +24,8 @@
               请在右侧输入要练习的诗词
             </div>
           </div>
-        </div>
-      </div>
+        </template>
+      </SheetPreview>
     </template>
 
     <!-- 控制面板 -->
@@ -98,6 +91,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { NInput, NSelect, NSlider } from 'naive-ui'
 import SheetContainer from '@/components/SheetContainer.vue'
+import SheetPreview from '@/components/SheetPreview.vue'
 import ControlPanel from '@/components/ControlPanel.vue'
 import SettingItem from '@/components/SettingItem.vue'
 import { useSheetStore, useSettingsStore, useFontsStore } from '@/stores'
@@ -106,12 +100,13 @@ import { GRID_OPTIONS, LAYOUT_OPTIONS, COLOR_OPTIONS, A4_DIMENSIONS } from '@/co
 import { printContent, exportAsPDF } from '@/utils/printer'
 
 // 页面常量
-const A4_WIDTH = A4_DIMENSIONS.WIDTH_PX     // A4宽度 (795px)
-const A4_HEIGHT = A4_DIMENSIONS.HEIGHT_PX    // A4高度 (1123px)
-const PAGE_MARGIN = 30                      // 统一页面边距
+const A4_WIDTH = A4_DIMENSIONS.WIDTH_PX
+const A4_HEIGHT = A4_DIMENSIONS.HEIGHT_PX
+const PAGE_MARGIN = 30
+const SIDE_MARGIN = 30
 
 // 组件引用
-const paperRef = ref<HTMLElement | null>(null)
+const previewRef = ref(null)
 
 // 存储引用
 const sheetStore = useSheetStore()
@@ -122,43 +117,48 @@ const fontsStore = useFontsStore()
 const inputText = ref('')
 
 // 布局设置
-const layoutType = ref<LayoutType>('vertical') // 默认竖排
-const gridType = ref<GridType>('fang')         // 默认方格
-const gridSize = ref(48)                       // 默认方格大小
+const layoutType = ref<LayoutType>('vertical')
+const gridType = ref<GridType>('fang')
+const gridSize = ref(48)
 
 // 字体设置
 const fontFamily = ref('楷体, KaiTi, STKaiti, serif')
 const fontSize = ref(80)
 
 // 描红设置
-const guideColor = ref('red')                 // 描红颜色
-const guideOpacity = ref(30)                  // 描红透明度 (百分比)
+const guideColor = ref('red')
+const guideOpacity = ref(10)
+
+// 获取颜色值映射
+function getColorValue(colorName: string): string {
+  switch (colorName) {
+    case 'red': return '#ff6666'
+    case 'blue': return '#6666ff'
+    case 'gray': return '#aaaaaa'
+    default: return '#ff6666'
+  }
+}
 
 // 格式化诗词 - 计算每行字符并自动换行
 const formattedLines = computed(() => {
   if (!inputText.value) return []
 
-  // 按行分割
   const lines = inputText.value.split('\n')
   const result = []
 
-  // 计算A4纸内容区有效宽度和高度
   const contentWidth = A4_WIDTH - (PAGE_MARGIN * 2)
   const contentHeight = A4_HEIGHT - (PAGE_MARGIN * 2)
 
-  // 计算每行/列能容纳的字符数量
   const charsPerRow = layoutType.value === 'vertical'
-    ? Math.floor(contentHeight / gridSize.value) // 竖排模式下一列可容纳的字符数
-    : Math.floor(contentWidth / gridSize.value)  // 横排模式下一行可容纳的字符数
+    ? Math.floor(contentHeight / gridSize.value)
+    : Math.floor(contentWidth / gridSize.value)
 
-  // 处理每行文本
   lines.forEach(line => {
-    if (!line.trim()) return // 跳过空行
+    if (!line.trim()) return
 
     const chars = Array.from(line.trim())
 
     if (layoutType.value === 'vertical') {
-      // 竖排模式 - 每一列是一个数组
       for (let i = 0; i < chars.length; i += charsPerRow) {
         const columnChars = chars.slice(i, i + charsPerRow)
         if (columnChars.length > 0) {
@@ -166,7 +166,6 @@ const formattedLines = computed(() => {
         }
       }
     } else {
-      // 横排模式 - 自动换行
       for (let i = 0; i < chars.length; i += charsPerRow) {
         const rowChars = chars.slice(i, i + charsPerRow)
         if (rowChars.length > 0) {
@@ -179,27 +178,73 @@ const formattedLines = computed(() => {
   return result
 })
 
-// 计算样式
-// A4纸样式
-const paperStyle = computed(() => ({
-  width: `${A4_WIDTH}px`,
-  height: `${A4_HEIGHT}px`,
-  padding: `${PAGE_MARGIN}px`,
-  boxSizing: 'border-box',
-  backgroundColor: 'white',
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-  position: 'relative',
-  overflow: 'hidden'
-}))
+// 计算内容区域的有效尺寸
+const contentDimensions = computed(() => {
+  const contentWidth = A4_WIDTH - (SIDE_MARGIN * 2)
+  const contentHeight = A4_HEIGHT - (PAGE_MARGIN * 2)
 
-// 行样式
+  const charsPerRow = layoutType.value === 'vertical'
+    ? Math.floor(contentHeight / gridSize.value)
+    : Math.floor(contentWidth / gridSize.value)
+
+  const rowsPerPage = layoutType.value === 'vertical'
+    ? Math.floor(contentWidth / gridSize.value)
+    : Math.floor(contentHeight / gridSize.value)
+
+  return {
+    width: contentWidth,
+    height: contentHeight,
+    charsPerRow,
+    rowsPerPage,
+    charsPerPage: charsPerRow * rowsPerPage
+  }
+})
+
+// 分页功能 - 将内容分成多个页面
+const paginatedContent = computed(() => {
+  if (!formattedLines.value || formattedLines.value.length === 0) {
+    return [[]]
+  }
+
+  const pages = []
+  let currentPage = []
+  let currentLineCount = 0
+
+  const { rowsPerPage } = contentDimensions.value
+
+  formattedLines.value.forEach(line => {
+    if (currentLineCount >= rowsPerPage) {
+      pages.push(currentPage)
+      currentPage = []
+      currentLineCount = 0
+    }
+
+    currentPage.push(line)
+    currentLineCount++
+  })
+
+  if (currentPage.length > 0) {
+    pages.push(currentPage)
+  }
+
+  return pages.length > 0 ? pages : [[]]
+})
+
+// 获取特定页面的行
+function getPageLines(pageIndex: number) {
+  if (!paginatedContent.value || !paginatedContent.value[pageIndex]) {
+    return []
+  }
+  return paginatedContent.value[pageIndex]
+}
+
+// 计算样式
 const lineStyle = computed(() => ({
   display: 'flex',
   flexDirection: layoutType.value === 'vertical' ? 'column' : 'row',
   margin: '0'
 }))
 
-// 单元格样式
 const cellStyle = computed(() => ({
   width: `${gridSize.value}px`,
   height: `${gridSize.value}px`,
@@ -207,41 +252,37 @@ const cellStyle = computed(() => ({
   margin: '0'
 }))
 
-// 字符样式
-const characterStyle = computed(() => ({
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  fontSize: `${fontSize.value * gridSize.value / 100}px`,
-  fontFamily: fontFamily.value,
-  color: 'black',
-  zIndex: 3,
-  userSelect: 'none'
-}))
+// 字符样式 - 使用描红颜色
+const characterStyle = computed(() => {
+  const strokeColorValue = getColorValue(guideColor.value)
 
-// 描红样式
-const guideStyle = computed(() => ({
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  fontSize: `${fontSize.value * gridSize.value / 100}px`,
-  fontFamily: fontFamily.value,
-  color: guideColor.value,
-  opacity: guideOpacity.value / 100,
-  zIndex: 2,
-  userSelect: 'none',
-  pointerEvents: 'none'
-}))
+  return {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    fontSize: `${fontSize.value * gridSize.value / 100}px`,
+    fontFamily: fontFamily.value,
+    color: strokeColorValue,
+    opacity: Math.max(0.1, guideOpacity.value / 100),
+    zIndex: 2,
+    userSelect: 'none'
+  }
+})
 
 // 打印和导出方法
 function handlePrint() {
-  if (!paperRef.value) return
+  if (!previewRef.value) return
+
+  const strokeColorValue = getColorValue(guideColor.value)
 
   printContent({
-    title: '诗词字帖',
-    content: paperRef.value,
+    title: '诗词字帖 - ' + (inputText.value ? inputText.value.substring(0, 20) : '空白练习'),
+    content: previewRef.value.previewContainerRef,
+    addStyles: `
+      .character-cell { page-break-inside: avoid; }
+      .character-reference { color: ${strokeColorValue} !important; opacity: ${Math.max(0.1, guideOpacity.value / 100)} !important; }
+    `,
     callback: () => {
       console.log('打印完成')
     }
@@ -249,9 +290,12 @@ function handlePrint() {
 }
 
 function handleExport() {
-  if (!paperRef.value) return
+  if (!previewRef.value) return
 
-  exportAsPDF('诗词字帖', paperRef.value)
+  exportAsPDF(
+    '诗词字帖 - ' + (inputText.value ? inputText.value.substring(0, 20) : '空白练习'),
+    previewRef.value.previewContainerRef
+  )
 }
 
 // 从Store加载设置
@@ -259,19 +303,14 @@ function loadFromStore() {
   const settings = sheetStore.settings
 
   if (settings) {
-    // 布局设置
     gridType.value = settings.gridType || 'fang'
     gridSize.value = settings.gridSize || 48
-
-    // 字体设置
     fontFamily.value = settings.fontFamily || '楷体, KaiTi, STKaiti, serif'
     fontSize.value = settings.fontSize || 80
-
-    // 描红设置
     guideColor.value = settings.guideColor || 'red'
-    guideOpacity.value = settings.guideOpacity || 30
+    guideOpacity.value = settings.guideOpacity || 10
 
-    // 诗词特有设置，从本地存储中恢复
+    // 诗词特有设置
     const poetrySettings = localStorage.getItem('poetry-settings')
     if (poetrySettings) {
       try {
@@ -282,7 +321,6 @@ function loadFromStore() {
       }
     }
 
-    // 之前输入的文本
     if (sheetStore.inputText) {
       inputText.value = sheetStore.inputText
     }
@@ -295,7 +333,6 @@ watch([
   fontFamily, fontSize,
   guideColor, guideOpacity
 ], () => {
-  // 保存通用设置到SheetStore
   sheetStore.updateSettings({
     gridType: gridType.value,
     gridSize: gridSize.value,
@@ -307,12 +344,7 @@ watch([
     guideOpacity: guideOpacity.value,
   })
 
-  // 保存诗词特有设置到localStorage
-  const poetrySettings = {
-    layoutType: layoutType.value,
-  }
-
-  localStorage.setItem('poetry-settings', JSON.stringify(poetrySettings))
+  localStorage.setItem('poetry-settings', JSON.stringify({ layoutType: layoutType.value }))
 })
 
 // 保存输入文本
@@ -325,18 +357,14 @@ watch(inputText, (newText) => {
 // 初始化
 onMounted(() => {
   loadFromStore()
-
-  // 记录A4尺寸和容量信息
-  const contentWidth = A4_WIDTH - (PAGE_MARGIN * 2)
-  const contentHeight = A4_HEIGHT - (PAGE_MARGIN * 2)
-
-  const charsPerRow = Math.floor(contentWidth / gridSize.value)
-  const charsPerColumn = Math.floor(contentHeight / gridSize.value)
-
 })
 </script>
 
 <style scoped>
+:deep(.paper) {
+  padding: 30px !important;
+}
+
 /* 预览容器 */
 .preview-container {
   flex: 1;
@@ -350,9 +378,11 @@ onMounted(() => {
 
 /* A4纸样式 */
 .a4-paper {
-  width: v-bind('A4_WIDTH + "px"');
-  height: v-bind('A4_HEIGHT + "px"');
-  padding: v-bind('PAGE_MARGIN + "px"');
+  width: v-bind(A4_WIDTH + 'px');
+  height: v-bind(A4_HEIGHT + 'px');
+  padding: v-bind(PAGE_MARGIN + 'px');
+  padding-left: 30px;
+  padding-right: 30px;
   box-sizing: border-box;
   background-color: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -372,7 +402,6 @@ onMounted(() => {
 /* 竖向布局 */
 .poetry-content.vertical-layout {
   flex-direction: row-reverse;
-  /* 从右向左排列 */
 }
 
 /* 诗词行 */
@@ -398,16 +427,10 @@ onMounted(() => {
   z-index: 1;
 }
 
-/* 描红字符 */
-.character-guide {
-  position: absolute;
-  z-index: 2;
-}
-
 /* 参考字符 */
 .character-reference {
   position: absolute;
-  z-index: 3;
+  z-index: 2;
 }
 
 /* 空状态提示 */
@@ -422,9 +445,7 @@ onMounted(() => {
 }
 
 .panel-section {
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
+  margin-bottom: 16px;
 }
 
 .section-title {
@@ -441,20 +462,9 @@ onMounted(() => {
 
 /* 打印样式优化 */
 @media print {
-  .preview-container {
-    padding: 0;
-    background-color: white;
-  }
-
-  .a4-paper {
-    box-shadow: none;
-    width: 210mm;
-    height: 297mm;
-  }
 
   .character-cell,
   .grid-background,
-  .character-guide,
   .character-reference {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
