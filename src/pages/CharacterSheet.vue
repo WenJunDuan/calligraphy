@@ -61,7 +61,7 @@
 
           <div class="setting-item">
             <div class="setting-label">练习字数</div>
-            <n-slider v-model:value="charsPerRow" :min="2" :max="30" :step="2" />
+            <n-slider v-model:value="charsPerRow" :min="2" :max="30"/>
             <div class="setting-value">{{ charsPerRow }}个</div>
           </div>
 
