@@ -365,6 +365,17 @@ onMounted(() => {
   padding: 30px !important;
 }
 
+:deep(.panel-content) {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  gap: 0px !important;
+}
+
+:deep(.panel-section) {
+  margin-bottom: 0px !important;
+}
+
 /* 预览容器 */
 .preview-container {
   flex: 1;
