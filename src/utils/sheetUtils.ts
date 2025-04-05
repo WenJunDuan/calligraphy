@@ -108,12 +108,13 @@ export function calculateGridContainerStyle({
   if (layoutType === 'vertical') {
     // 竖排布局 - 不设置行间距，增加列数，保留左右边距
     // 计算最佳列数，根据网格大小动态调整
-    const optimalColumns = Math.min(15, Math.floor((availableWidth - (SIDE_MARGIN * 2)) / gridSize))
+    // 使用可用宽度减去左右边距，然后除以网格大小，得到最大列数
+    const maxColumns = Math.floor((availableWidth - (SIDE_MARGIN * 2)) / gridSize)
     
     return {
       ...baseStyle,
       display: 'grid',
-      gridTemplateColumns: `repeat(${optimalColumns}, ${gridSize}px)`, // 动态计算列数
+      gridTemplateColumns: `repeat(${maxColumns}, ${gridSize}px)`, // 使用最大列数
       gridTemplateRows: `repeat(${charsPerRow}, ${gridSize}px)`,
       justifyContent: 'center',
       gridAutoFlow: 'column',
@@ -187,7 +188,7 @@ export function paginateCharacters({
   const A4_HEIGHT_PX = A4_DIMENSIONS.HEIGHT_PX
 
   // 固定的左右边距值
-  const SIDE_MARGIN = 20
+  const SIDE_MARGIN = 10
 
   // 初始化所有单元格
   const actualCharsPerRow = charsPerRow || 1 // 确保不为零

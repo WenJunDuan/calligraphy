@@ -189,11 +189,16 @@ const calculateOptimalGridSize = (layoutType: LayoutType) => {
     // 竖排布局 - 计算最佳网格大小和每列字符数
     // 考虑左右边距，所以可用宽度减去两倍的SIDE_MARGIN
     const effectiveWidth = availableWidth - (SIDE_MARGIN * 2)
-    // 计算最佳列数，根据网格大小动态调整
-    const optimalColumns = Math.min(15, Math.floor(effectiveWidth / MIN_GRID_SIZE))
-    // 根据最佳列数计算最佳网格大小
-    const optimalSize = Math.min(MAX_GRID_SIZE, Math.max(MIN_GRID_SIZE, Math.floor(effectiveWidth / optimalColumns)))
+    
+    // 计算最大列数，根据网格大小动态调整
+    const maxColumns = Math.floor(effectiveWidth / MIN_GRID_SIZE)
+    
+    // 根据最大列数计算最佳网格大小
+    const optimalSize = Math.min(MAX_GRID_SIZE, Math.max(MIN_GRID_SIZE, Math.floor(effectiveWidth / maxColumns)))
+    
+    // 计算每列可容纳的字符数
     const optimalCharsPerColumn = Math.floor(availableHeight / optimalSize)
+    
     return { gridSize: optimalSize, charsPerRow: optimalCharsPerColumn }
   } else {
     // 网格布局 - 计算最佳网格大小和每行字符数
@@ -224,8 +229,8 @@ watch(gridSize, (newValue) => {
     const availableHeight = A4_HEIGHT_PX - (PAGE_MARGIN * 2)
     // 考虑左右边距
     const effectiveWidth = availableWidth - (SIDE_MARGIN * 2)
-    // 计算最佳列数，根据网格大小动态调整
-    const optimalColumns = Math.min(15, Math.floor(effectiveWidth / newValue))
+    // 计算最大列数
+    const maxColumns = Math.floor(effectiveWidth / newValue)
     charsPerRow.value = Math.floor(availableHeight / newValue)
   } else {
     // 网格布局 - 计算每行字符数
