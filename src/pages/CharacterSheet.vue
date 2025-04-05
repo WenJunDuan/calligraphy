@@ -1,135 +1,131 @@
 <template>
-  <div class="sheet-page" :style="printMarginStyles">
-    <AppHeader />
-
-    <div class="sheet-content">
-      <!-- 字帖预览区域 -->
-      <div class="sheet-preview" ref="previewContainerRef">
-        <!-- Loop through pages -->
-        <div class="page" v-for="(pageCells, pageIndex) in paginatedCells" :key="`page-${pageIndex}`">
-          <div class="paper" :style="paperStyle">
-            <template v-if="pageCells.length > 0">
-              <div class="character-grid" :style="gridContainerStyle">
-                <div v-for="(item, index) in pageCells" :key="`char-${pageIndex}-${index}`" class="character-cell"
-                  :class="{ 'row-first': item.isRowFirst }" :style="cellStyle">
-                  <!-- 顶部拼音，在行首字上显示 -->
-                  <template v-if="showPinyin && item.char !== ' ' && item.isRowFirst">
-                    <div class="pinyin-area">
-                      <small>{{ getPinyin(item.char) }}</small>
-                    </div>
-                  </template>
-
-                  <!-- 中间汉字 -->
-                  <div class="character" :style="getCharacterStyle(item)">
-                    {{ item.char }}
-                  </div>
-
-                  <!-- 背景网格 -->
-                  <div class="grid-background" :class="gridType"></div>
+  <SheetContainer>
+    <template #preview>
+      <SheetPreview :pages="paginatedCells" ref="previewRef">
+        <template #content="{ pageCells }">
+          <div v-if="pageCells.length > 0" class="character-grid" :style="gridContainerStyle">
+            <div v-for="(item, index) in pageCells" 
+                :key="`char-${index}`" 
+                class="character-cell" 
+                :class="{ 'row-first': item.isRowFirst }" 
+                :style="cellStyle">
+              
+              <template v-if="item.isRowFirst && item.char !== ' ' && item.char !== '　'">
+                <div class="info-area">
+                  <span v-if="showPinyin" class="pinyin-text">{{ getPinyin(item.char) }}</span>
+                  
+                  <span v-if="showStrokes" class="stroke-text">
+                    {{ getStrokeNamesString(item.char) }}
+                  </span>
                 </div>
+              </template>
+              
+              <div class="character" :style="getCharacterStyle(item)">
+                {{ item.char }}
               </div>
-            </template>
-            <template v-else>
-              <!-- 默认显示空白字帖 -->
-              <div class="character-grid" :style="gridContainerStyle">
-                <div v-for="index in defaultGridCount" :key="`empty-${index}`" class="character-cell"
-                  :style="cellStyle">
-                  <!-- 背景网格 -->
-                  <div class="grid-background" :class="gridType"></div>
-                </div>
-              </div>
-            </template>
+              
+              <div class="grid-background" :class="gridType"></div>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <!-- 控制面板 -->
-      <div class="control-panel">
-        <div class="panel-actions">
-          <n-button class="export-btn" @click="handleExport">导出</n-button>
-          <n-button type="primary" class="print-btn" @click="handlePrint">打印</n-button>
-        </div>
-
-        <div class="panel-content">
-          <n-input v-model:value="inputText" type="textarea" placeholder="输入要练习的文字" :rows="4" class="text-input" />
-
-          <div class="setting-item">
-            <div class="setting-label">方格大小</div>
-            <n-slider v-model:value="gridSize" :min="32" :max="80" :step="2" />
-            <div class="setting-value">{{ gridSize }}px</div>
+          
+          <div v-else class="character-grid" :style="gridContainerStyle">
+            <div v-for="index in defaultGridCount" 
+                 :key="`empty-${index}`" 
+                 class="character-cell" 
+                 :style="cellStyle">
+              <div class="grid-background" :class="gridType"></div>
+            </div>
           </div>
+        </template>
+      </SheetPreview>
+    </template>
 
-          <div class="setting-item">
-            <div class="setting-label">字体大小</div>
+    <template #control-panel>
+      <ControlPanel @print="handlePrint" @export="handleExport">
+        <div class="panel-section">
+          <n-input v-model:value="inputText" type="textarea" 
+                  placeholder="输入要练习的文字" 
+                  :autosize="{ minRows: 4, maxRows: 8 }" />
+        </div>
+        
+        <div class="panel-section">
+          <h3 class="section-title">基本设置</h3>
+          
+          <SettingItem label="格子大小">
+            <n-slider v-model:value="gridSize" :min="32" :max="80" :step="4" />
+            <template #value>{{ gridSize }}px</template>
+          </SettingItem>
+
+          <SettingItem label="字体大小">
             <n-slider v-model:value="fontSize" :min="40" :max="100" :step="5" />
-            <div class="setting-value">{{ fontSize }}%</div>
-          </div>
+            <template #value>{{ fontSize }}%</template>
+          </SettingItem>
 
-          <div class="setting-item">
-            <div class="setting-label">练习字数</div>
-            <!-- Dynamically set max based on layout -->
-            <n-slider v-model:value="charsPerRow" :min="2" :max="30"/>
-            <div class="setting-value">{{ charsPerRow }}个</div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-label">字体类型</div>
+          <SettingItem label="练习数量">
+            <n-slider v-model:value="charsPerRow" :min="2" :max="maxCharsPerRow" />
+            <template #value>{{ charsPerRow }}个</template>
+          </SettingItem>
+        </div>
+        
+        <div class="panel-section">
+          <h3 class="section-title">样式设置</h3>
+          
+          <SettingItem label="字体">
             <n-select v-model:value="fontFamily" :options="fontsStore.fontOptions" />
-          </div>
+          </SettingItem>
 
-          <div class="setting-item">
-            <div class="setting-label">方格类型</div>
+          <SettingItem label="格子类型">
             <n-select v-model:value="gridType" :options="GRID_OPTIONS" />
-          </div>
+          </SettingItem>
 
-          <div class="setting-item">
-            <div class="setting-label">排版方式</div>
+          <SettingItem label="排版方式">
             <n-select v-model:value="layoutType" :options="LAYOUT_OPTIONS" />
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-label">描红颜色</div>
+          </SettingItem>
+        </div>
+        
+        <div class="panel-section">
+          <h3 class="section-title">描红设置</h3>
+          
+          <SettingItem label="描红颜色">
             <n-select v-model:value="strokeColor" :options="COLOR_OPTIONS" />
+          </SettingItem>
+
+          <SettingItem label="描红透明度">
+            <n-slider v-model:value="strokeOpacity" :min="10" :max="80" />
+            <template #value>{{ strokeOpacity }}%</template>
+          </SettingItem>
+          
+          <div class="toggle-item">
+            <span class="toggle-label">显示拼音</span>
+            <n-switch v-model:value="showPinyin" />
           </div>
-
-          <div class="setting-item">
-            <div class="setting-label">描红透明度</div>
-            <n-slider v-model:value="strokeOpacity" :min="0" :max="100" />
-            <div class="setting-value">{{ strokeOpacity }}%</div>
-          </div>
-
-          <div class="toggle-group">
-            <div class="toggle-item">
-              <span class="toggle-label">显示拼音</span>
-              <n-switch v-model:value="showPinyin" />
-            </div>
-
-            <div class="toggle-item">
-              <span class="toggle-label">显示笔画</span>
-              <n-switch v-model:value="showStrokes" />
-            </div>
+          
+          <div class="toggle-item">
+            <span class="toggle-label">显示笔顺</span>
+            <n-switch v-model:value="showStrokes" />
           </div>
         </div>
-      </div>
-    </div>
-    <AppFooter />
-  </div>
+      </ControlPanel>
+    </template>
+  </SheetContainer>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, CSSProperties } from 'vue'
-import { NButton, NInput, NSelect, NSlider, NSwitch } from 'naive-ui'
-import AppHeader from '@/components/AppHeader.vue'
-import AppFooter from '@/components/AppFooter.vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import { NInput, NSelect, NSlider, NSwitch } from 'naive-ui'
+import SheetContainer from '@/components/SheetContainer.vue'
+import SheetPreview from '@/components/SheetPreview.vue'
+import ControlPanel from '@/components/ControlPanel.vue'
+import SettingItem from '@/components/SettingItem.vue'
 import { useSheetStore, useSettingsStore, useFontsStore } from '@/stores'
 import { PinyinService } from '@/services/pinyinService'
+import { CncharService } from '@/services/cncharService'
 import { GridType, LayoutType, CellData } from '@/types'
 import {
   GRID_OPTIONS,
   LAYOUT_OPTIONS,
   COLOR_OPTIONS,
   COMMON_CHARACTERS,
-  A4_DIMENSIONS,
   DEFAULT_SHEET_SETTINGS
 } from '@/constants'
 import { printContent, exportAsPDF } from '@/utils/printer'
@@ -142,26 +138,20 @@ import {
   getPinyin
 } from '@/utils/sheetUtils'
 
-// 默认网格数量（空白时）  
-const defaultGridCount = 5 * 10 // 5列10行默认网格  
-
-// === 状态管理 ===
-// 存储引用  
+const defaultGridCount = 50
 const sheetStore = useSheetStore()
 const settingsStore = useSettingsStore()
 const fontsStore = useFontsStore()
-const previewContainerRef = ref<HTMLElement | null>(null)
+const previewRef = ref(null)
 
-// 输入文本  
+// 笔画缓存 - 临时使用，保证页面响应性
+const strokeCache = ref(new Map<string, string>())
+
 const inputText = ref('')
-const characters = computed(() => {
-  if (!inputText.value) return []
-  return Array.from(inputText.value.trim())
-})
+const characters = computed(() => inputText.value ? Array.from(inputText.value.trim()) : [])
 
-// 字帖设置
 const showPinyin = ref(true)
-const showStrokes = ref(true)
+const showStrokes = ref(false)
 const gridType = ref<GridType>('tian')
 const gridSize = ref(64)
 const fontSize = ref(80)
@@ -169,90 +159,44 @@ const fontFamily = ref('楷体, KaiTi, STKaiti, serif')
 const strokeColor = ref('lightgray')
 const strokeOpacity = ref(10)
 const layoutType = ref<LayoutType>('grid')
-// Initialize based on initial layout
-const charsPerRow = ref(layoutType.value === 'vertical' ? 16 : 12) // 每列字符数
+const charsPerRow = ref(10)
 
-// 监听布局类型变化，设置默认描红字数
+const maxCharsPerRow = computed(() => layoutType.value === 'vertical' ? 20 : 30)
+
 watch(layoutType, (newValue) => {
   if (newValue === 'vertical') {
-    charsPerRow.value = 16;
-  } else { // grid
-    charsPerRow.value = 12;
+    charsPerRow.value = Math.min(charsPerRow.value, 20)
   }
-}, { immediate: true }); // Run immediately to set initial value correctly
+}, { immediate: true })
 
-// 监听字体变化
-watch(fontFamily, (newValue) => {
-  // 从fontFamily中提取字体名称
-  const fontFamilies = newValue.split(',').map(name => name.trim());
-
-  // 搜索fontOptions找到匹配的字体选项
-  const fontOption = fontsStore.fontOptions.find(option =>
-    fontFamilies.some(name => option.value.includes(name))
-  );
-
-  // 如果找到匹配的字体选项，尝试加载字体
-  if (fontOption) {
-    console.log(`字体 '${fontOption.label}' 已选择`);
-  }
-}, { immediate: true });
-
-// === 计算属性 ===
-// A4 dimensions from constants
-const A4_WIDTH_PX = A4_DIMENSIONS.WIDTH_PX;
-const A4_HEIGHT_PX = A4_DIMENSIONS.HEIGHT_PX;
-
-// Computed style for the paper element - Screen view has smaller padding
-const paperStyle = computed((): CSSProperties => {
-  const screenPadding = '20px'; // Smaller padding for screen display
-
-  return {
-    width: `${A4_WIDTH_PX}px`,
-    minHeight: `${A4_HEIGHT_PX}px`, // Use min-height to allow content growth
-    padding: screenPadding,
-    boxSizing: 'border-box',
-    backgroundColor: 'white',
-    boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)'
-  };
-});
-
-// CSS variables for print margins
-const printMarginStyles = computed(() => {
-  const margins = settingsStore.printSettings.margins;
-  return {
-    '--print-margin-top': `${margins.top}mm`,
-    '--print-margin-right': `${margins.right}mm`,
-    '--print-margin-bottom': `${margins.bottom}mm`,
-    '--print-margin-left': `${margins.left}mm`,
-  };
-});
-
-// 计算分页单元格数据 - 增加 gridSize 参数传递
-const paginatedCells = computed((): CellData[][] => {
+const paginatedCells = computed(() => {
   return paginateCharacters({
     characters: characters.value,
     layoutType: layoutType.value,
     charsPerRow: charsPerRow.value,
-    gridSize: gridSize.value, // 传入当前网格大小
+    gridSize: gridSize.value,
     printSettings: settingsStore.printSettings
-  });
-});
+  })
+})
 
-// 计算网格容器样式
 const gridContainerStyle = computed(() => {
   return calculateGridContainerStyle({
     layoutType: layoutType.value,
     gridSize: gridSize.value,
     charsPerRow: charsPerRow.value
-  });
-});
+  })
+})
 
-// 计算单元格样式
 const cellStyle = computed(() => {
-  return calculateCellStyle(gridSize.value);
-});
+  const baseStyle = calculateCellStyle(gridSize.value)
+  const rowGap = (showPinyin.value || showStrokes.value) ? '30px' : '0px'
+  
+  return {
+    ...baseStyle,
+    marginTop: rowGap
+  }
+})
 
-// 基础字符样式
 const characterStyle = computed(() => {
   return calculateCharacterStyle({
     gridSize: gridSize.value,
@@ -260,66 +204,117 @@ const characterStyle = computed(() => {
     fontFamily: fontFamily.value,
     fontColor: 'black',
     layoutType: layoutType.value
-  });
-});
+  })
+})
 
-// === 方法 ===
-// 获取字符样式
 function getCharacterStyle(item: CellData) {
   if (!item.isRowFirst) {
     return calculateStrokeStyle(
       characterStyle.value,
       strokeColor.value,
       strokeOpacity.value
-    );
+    )
   }
-  return characterStyle.value;
+  return characterStyle.value
 }
 
-// 导出与打印功能  
-function handlePrint() {
-  if (!previewContainerRef.value) return;
+// 获取笔画名称字符串
+function getStrokeNamesString(char: string): string {
+  if (!char || char === ' ' || char === '　') {
+    return ''
+  }
 
+  // 检查缓存
+  if (strokeCache.value.has(char)) {
+    return strokeCache.value.get(char) || ''
+  }
+
+  try {
+    // 获取笔画数据
+    const strokeData = CncharService.getStrokeData(char)
+    
+    if (strokeData && strokeData.strokeNames && strokeData.strokeNames.length > 0) {
+      // 直接使用笔画符号，无需转换
+      const result = getStrokeSymbols(strokeData.strokeNames).join('')
+      strokeCache.value.set(char, result)
+      return result
+    }
+  } catch (error) {
+    console.error(`获取"${char}"的笔画失败:`, error)
+  }
+  
+  return ''
+}
+
+// 将笔画名称转换为笔画符号
+function getStrokeSymbols(strokeNames: string[]): string[] {
+  return strokeNames.map(name => {
+    if (name.includes('横')) return '一'
+    if (name.includes('竖')) return '丨'
+    if (name.includes('撇')) return '丿'
+    if (name.includes('点')) return '丶'
+    if (name.includes('捺')) return '㇏'
+    if (name.includes('提')) return '㇀'
+    if (name.includes('钩')) return '亅'
+    if (name.includes('折')) return '乛'
+    return name.charAt(0)
+  })
+}
+
+// 预加载当前文本的笔画数据
+function preloadStrokeData() {
+  if (!inputText.value) return
+  
+  const chars = new Set(inputText.value.trim())
+  
+  chars.forEach(char => {
+    if (!strokeCache.value.has(char)) {
+      // 异步获取笔画数据，不阻塞UI
+      setTimeout(() => {
+        getStrokeNamesString(char)
+      }, 0)
+    }
+  })
+}
+
+function handlePrint() {
+  if (!previewRef.value) return
+  
   printContent({
     title: `汉字练习 - ${inputText.value || '空白字帖'}`,
-    content: previewContainerRef.value,
-    callback: () => {
-      console.log('打印完成');
-    }
-  });
+    content: previewRef.value.previewContainerRef,
+    callback: () => console.log('打印完成')
+  })
 }
 
 function handleExport() {
-  if (!previewContainerRef.value) return;
-
-  exportAsPDF(`汉字练习 - ${inputText.value || '空白字帖'}`, previewContainerRef.value);
+  if (!previewRef.value) return
+  
+  exportAsPDF(`汉字练习 - ${inputText.value || '空白字帖'}`, 
+              previewRef.value.previewContainerRef)
 }
 
-// 加载状态从Store  
 function loadFromStore() {
-  const settings = sheetStore.settings;
-
-  // 只有当store中有值时才加载  
+  const settings = sheetStore.settings
+  
   if (settings) {
-    gridType.value = settings.gridType || 'tian';
-    gridSize.value = settings.gridSize || DEFAULT_SHEET_SETTINGS.gridSize;
-    fontSize.value = settings.fontSize || DEFAULT_SHEET_SETTINGS.fontSize;
-    strokeColor.value = settings.guideColor || DEFAULT_SHEET_SETTINGS.guideColor;
-    strokeOpacity.value = settings.guideOpacity || DEFAULT_SHEET_SETTINGS.guideOpacity;
-    showPinyin.value = settings.showPinyin !== undefined ? settings.showPinyin : true;
-    showStrokes.value = settings.showGuides !== undefined ? settings.showGuides : true;
-    layoutType.value = settings.layoutType as LayoutType || 'grid';
-    charsPerRow.value = settings.charsPerRow || DEFAULT_SHEET_SETTINGS.charsPerRow;
-    fontFamily.value = settings.fontFamily || DEFAULT_SHEET_SETTINGS.fontFamily;
+    gridType.value = settings.gridType || DEFAULT_SHEET_SETTINGS.gridType
+    gridSize.value = settings.gridSize || DEFAULT_SHEET_SETTINGS.gridSize
+    fontSize.value = settings.fontSize || DEFAULT_SHEET_SETTINGS.fontSize
+    strokeColor.value = settings.guideColor || DEFAULT_SHEET_SETTINGS.guideColor
+    strokeOpacity.value = settings.guideOpacity || DEFAULT_SHEET_SETTINGS.guideOpacity
+    showPinyin.value = settings.showPinyin ?? DEFAULT_SHEET_SETTINGS.showPinyin
+    showStrokes.value = settings.showGuides ?? DEFAULT_SHEET_SETTINGS.showGuides
+    layoutType.value = settings.layoutType as LayoutType || DEFAULT_SHEET_SETTINGS.layoutType
+    charsPerRow.value = settings.charsPerRow || DEFAULT_SHEET_SETTINGS.charsPerRow
+    fontFamily.value = settings.fontFamily || DEFAULT_SHEET_SETTINGS.fontFamily
   }
-
-  // 加载上次输入的文本  
+  
   if (sheetStore.inputText) {
-    inputText.value = sheetStore.inputText;
+    inputText.value = sheetStore.inputText
   }
 }
 
-// 保存状态到Store  
 watch([
   gridType, gridSize, fontSize, strokeColor,
   strokeOpacity, showPinyin, showStrokes,
@@ -337,101 +332,89 @@ watch([
     showPinyin: showPinyin.value,
     showGuides: showStrokes.value,
     withTone: true,
-    pinyinFontSize: 40,
+    pinyinFontSize: 14,
     pinyinColor: '#666666',
     layoutType: layoutType.value,
     charsPerRow: charsPerRow.value,
     isSingleCharMode: true
-  });
-});
+  })
+})
 
-// 保存输入文本  
 watch(inputText, (newText) => {
   if (newText) {
-    sheetStore.setInputText(newText);
+    sheetStore.setInputText(newText)
+    // 当文本变化时预加载笔画数据
+    preloadStrokeData()
   }
-});
+})
 
-// 初始化  
+// 监听笔画显示状态变化
+watch(showStrokes, (newVal) => {
+  if (newVal) {
+    // 当开启笔画显示时，预加载当前文本的笔画数据
+    preloadStrokeData()
+  }
+})
+
 onMounted(() => {
-  loadFromStore();
-  // 预加载常用汉字拼音
-  PinyinService.preloadCommonCharacters(COMMON_CHARACTERS);
-});
+  loadFromStore()
+  PinyinService.preloadCommonCharacters(COMMON_CHARACTERS)
+  
+  // 如果已启用笔画显示，预加载笔画数据
+  if (showStrokes.value && inputText.value) {
+    preloadStrokeData()
+  }
+})
 </script>
 
 <style scoped>
-/* 页面整体布局 */
-.sheet-page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: #f5f7fa;
+.panel-section {
+  margin-bottom: 16px;
 }
 
-.sheet-content {
-  display: flex;
-  flex: 1;
-  padding: 12px;
-  gap: 16px;
-  max-width: 1144px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-/* 预览区域 */
-.sheet-preview {
-  flex: 1;
-  background-color: #eef1f5;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  /* Stack pages vertically */
-  align-items: center;
-  /* Center pages horizontally */
-  overflow: auto;
-  gap: 20px;
-}
-
-.page {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-.paper {
-  display: flex;
-  justify-content: center;
-  margin: 0 auto;
+.section-title {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  color: #333;
 }
 
 .character-grid {
   width: 100%;
 }
 
-/* 字符单元格 */
 .character-cell {
   position: relative;
 }
 
-/* 行首字样式 */
 .row-first {
   font-weight: 500;
-  /* 加粗 */
   color: #000;
-  /* 强制黑色 */
 }
 
-.pinyin-area {
+.info-area {
   position: absolute;
-  top: -22px;
-  /* 拼音区域上移 */
+  top: -20px;
   left: 0;
-  width: 100%;
-  text-align: center;
+  width: 120%;
+  max-width: 120%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5;
+  white-space: nowrap;
+  transform: translateX(-10%);
+}
+
+.pinyin-text {
+  font-size: 12px;
   color: #666;
-  font-size: 14px;
-  z-index: 2;
+  margin-right: 4px;
+}
+
+.stroke-text {
+  font-size: 11px;
+  color: #888;
 }
 
 .character {
@@ -452,50 +435,11 @@ onMounted(() => {
   z-index: 0;
 }
 
-/* 控制面板样式 */
-.control-panel {
-  width: 300px;
-  background-color: white;
-  border-radius: 8px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.panel-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.export-btn,
-.print-btn {
-  flex: 1;
-}
-
-.panel-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  overflow-y: auto;
-  max-height: calc(100vh - 150px);
-}
-
-.text-input {
-  width: 100%;
-  margin-bottom: 16px;
-}
-
-.toggle-group {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 .toggle-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin: 12px 0;
 }
 
 .toggle-label {
@@ -503,125 +447,15 @@ onMounted(() => {
   color: #333;
 }
 
-.setting-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.setting-label {
-  flex: 0 0 70px;
-  margin-bottom: 0;
-  font-size: 14px;
-  color: #666;
-}
-
-.setting-item .n-slider {
-  flex: 1 1 auto;
-}
-
-.setting-value {
-  flex: 0 0 50px;
-  text-align: right;
-  margin-top: 0;
-  font-size: 12px;
-  color: #999;
-}
-
-/* 打印样式 */
 @media print {
-  @page {
-    margin: 0;
-    /* Remove browser default margins */
-    size: A4;
-    /* Explicitly set paper size for print */
-  }
-
-  body {
-    margin: 0;
-    /* Ensure body has no margin */
-    background-color: white !important;
-    /* Ensure white background */
-  }
-
-  .sheet-page {
-    min-height: unset;
-    /* Allow page to shrink if needed */
-  }
-
-  .app-header,
-  .control-panel,
-  .app-footer {
-    display: none;
-  }
-
-  .sheet-content {
-    padding: 0;
-    display: block;
-    /* Override flex for print */
-    max-width: none;
-    /* Remove max-width */
-    margin: 0;
-  }
-
-  .sheet-preview {
-    overflow: visible;
-    background-color: transparent;
-    /* Remove background for print */
-    padding: 0;
-    display: block;
-    /* Reset flex layout for print */
-    gap: 0;
-    border-radius: 0;
-    height: 100vh;
-    /* Try setting preview height */
-  }
-
-  .page {
-    page-break-after: always;
-    /* Ensure page breaks between .page elements */
-    width: 100%;
-    /* Ensure page takes full width */
-    height: 100%;
-    /* Ensure page takes full height */
-    display: flex;
-    /* Use flex to center paper */
-    justify-content: center;
-    align-items: flex-start;
-    /* Align paper to top */
-    overflow: hidden;
-    /* Prevent content spill */
-    background-color: transparent;
-    /* Ensure no background interfere */
-    margin-bottom: 0;
-    /* Remove margin in print view */
-  }
-
-  .paper {
-    box-shadow: none;
-    margin: 0;
-    width: 210mm;
-    height: 297mm;
-    background-color: white;
-    padding-top: var(--print-margin-top);
-    padding-right: var(--print-margin-right);
-    padding-bottom: var(--print-margin-bottom);
-    padding-left: var(--print-margin-left);
-    box-sizing: border-box;
-  }
-
-  .character-grid {
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  /* Force printing background graphics for grid */
-  .character-cell,
-  .grid-background {
+  .character-cell, 
+  .grid-background,
+  .character,
+  .info-area,
+  .pinyin-text,
+  .stroke-text {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
-    /* For older Safari/Chrome */
   }
 }
 </style>

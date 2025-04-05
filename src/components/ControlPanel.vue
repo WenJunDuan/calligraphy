@@ -45,7 +45,7 @@
   .panel-content {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 1px;
     overflow-y: auto;
   }
   

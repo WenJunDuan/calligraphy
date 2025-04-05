@@ -358,7 +358,7 @@ try {
 }
 
 .panel-section {
-  margin-bottom: 24px;
+  margin-bottom: 1px;
 }
 
 .section-title {

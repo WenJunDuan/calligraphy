@@ -92,6 +92,7 @@
     display: flex;
     flex-direction: column;
     margin: 0 auto;
+    padding: 30px;
   }
   
   .empty-state {
@@ -137,7 +138,6 @@
       width: 210mm; /* Explicit A4 width */
       height: 297mm; /* Explicit A4 height */
       background-color: white; /* Ensure background for content */
-      /* Apply print margins using padding with CSS variables */
       padding-top: var(--print-margin-top);
       padding-right: var(--print-margin-right);
       padding-bottom: var(--print-margin-bottom);
