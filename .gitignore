@@ -4,8 +4,8 @@
 /.cursor
 node_modules
 pnpm-lock.yaml
-src/components.d.ts
 .cursorrules
-src/components.d.ts
 .gitignore
 .cursorignore
+src/components.d.ts
+src/auto-imports.d.ts

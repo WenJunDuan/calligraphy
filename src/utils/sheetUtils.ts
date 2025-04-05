@@ -76,45 +76,64 @@ export function calculateGridContainerStyle({
   gridSize: number
   charsPerRow: number
 }): CSSProperties {
-  // 固定的左右边距值
-  const SIDE_MARGIN = 20
-
-  // 基本设置 - 适用于所有布局
+  // A4页面基本参数（以像素为单位）
+  const A4_WIDTH_PX = A4_DIMENSIONS.WIDTH_PX
+  const A4_HEIGHT_PX = A4_DIMENSIONS.HEIGHT_PX
+  
+  // 页面边距设置
+  const PAGE_MARGIN = 20 // 页面边距（像素）
+  const ROW_GAP = 30 // 行间距（像素）
+  const SIDE_MARGIN = 10 // 左右边距（像素）
+  
+  // 计算可用空间
+  const availableWidth = A4_WIDTH_PX - (PAGE_MARGIN * 2)
+  const availableHeight = A4_HEIGHT_PX - (PAGE_MARGIN * 2)
+  
+  // 计算每行可容纳的网格数
+  const maxGridsPerRow = Math.floor((availableWidth - (SIDE_MARGIN * 2)) / gridSize)
+  
+  // 计算每列可容纳的网格数
+  const maxGridsPerColumn = Math.floor(availableHeight / (gridSize + ROW_GAP))
+  
+  // 基本样式设置
   const baseStyle: CSSProperties = {
-    paddingTop: layoutType === 'vertical' ? '10px' : '20px',
     boxSizing: 'border-box',
-    width: '100%'
+    width: '100%',
+    maxWidth: `${availableWidth}px`,
+    margin: '0 auto',
+    padding: `${PAGE_MARGIN}px ${PAGE_MARGIN}px ${PAGE_MARGIN}px ${PAGE_MARGIN}px`,
+    paddingTop: '0px'
   }
 
   if (layoutType === 'vertical') {
-    // 竖排布局
-    // 计算打印页面宽度相关参数
-    const availableWidthInsidePaper = A4_DIMENSIONS.WIDTH_PX - 40 // 20px padding each side
-    const availableWidthWithMargin = availableWidthInsidePaper - SIDE_MARGIN * 2
-
-    // 根据可用宽度和网格大小计算可放置的列数
-    const maxColumnsPerPage = Math.floor(availableWidthWithMargin / gridSize)
-
+    // 竖排布局 - 不设置行间距，增加列数，保留左右边距
+    // 计算最佳列数，根据网格大小动态调整
+    const optimalColumns = Math.min(15, Math.floor((availableWidth - (SIDE_MARGIN * 2)) / gridSize))
+    
     return {
       ...baseStyle,
       display: 'grid',
-      gridTemplateColumns: `repeat(${maxColumnsPerPage}, ${gridSize}px)`,
-      gridTemplateRows: `repeat(${charsPerRow || 1}, ${gridSize}px)`,
-      justifyContent: 'center', // 使其居中显示
+      gridTemplateColumns: `repeat(${optimalColumns}, ${gridSize}px)`, // 动态计算列数
+      gridTemplateRows: `repeat(${charsPerRow}, ${gridSize}px)`,
+      justifyContent: 'center',
       gridAutoFlow: 'column',
       gridAutoColumns: `${gridSize}px`,
-      paddingLeft: `${SIDE_MARGIN}px`,
-      paddingRight: `${SIDE_MARGIN}px`
+      marginTop: '0', // 减少顶部空白
+      paddingLeft: `${PAGE_MARGIN + SIDE_MARGIN}px`, // 增加左边距
+      paddingRight: `${PAGE_MARGIN + SIDE_MARGIN}px` // 增加右边距
     }
   } else {
-    // 网格布局
+    // 网格布局 - 保留行间距
     return {
       ...baseStyle,
       display: 'grid',
-      gridTemplateColumns: `repeat(auto-fit, minmax(${gridSize}px, 0fr))`,
+      gridTemplateColumns: `repeat(${maxGridsPerRow}, ${gridSize}px)`,
       gridAutoRows: `${gridSize}px`,
       justifyContent: 'center',
-      rowGap: '30px'
+      rowGap: `${ROW_GAP}px`,
+      marginTop: '0', // 减少顶部空白
+      paddingLeft: `${PAGE_MARGIN + SIDE_MARGIN}px`, // 增加左边距
+      paddingRight: `${PAGE_MARGIN + SIDE_MARGIN}px` // 增加右边距
     }
   }
 }

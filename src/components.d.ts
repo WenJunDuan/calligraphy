@@ -16,7 +16,9 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SettingItem: typeof import('./components/SettingItem.vue')['default']
     SheetContainer: typeof import('./components/SheetContainer.vue')['default']
+    SheetControlPanel: typeof import('./components/SheetControlPanel.vue')['default']
     SheetPreview: typeof import('./components/SheetPreview.vue')['default']
+    SheetSettings: typeof import('./components/SheetSettings.vue')['default']
     StrokeDisplay: typeof import('./components/StrokeDisplay.vue')['default']
     ToggleSetting: typeof import('./components/ToggleSetting.vue')['default']
   }

@@ -22,7 +22,7 @@
     </div>
   </template>
   
-  <script setup lang="ts">
+  <script setup lang="ts" generic="T">
   import { ref, CSSProperties, computed, PropType } from 'vue'
   import { useSettingsStore } from '@/stores/settings'
   
@@ -41,7 +41,7 @@
     },
     // 分页的内容数组
     pages: {
-      type: Array,
+      type: Array as PropType<T[][]>,
       default: () => [[]]
     }
   })
