@@ -5,30 +5,36 @@
     <div class="sheet-content">
       <!-- 字帖预览区域 -->
       <div class="sheet-preview" ref="previewContainerRef">
+        <!-- Loop through pages -->
         <div class="page" v-for="(pageCells, pageIndex) in paginatedCells" :key="`page-${pageIndex}`">
           <div class="paper" :style="paperStyle">
             <template v-if="pageCells.length > 0">
               <div class="character-grid" :style="gridContainerStyle">
                 <div v-for="(item, index) in pageCells" :key="`char-${pageIndex}-${index}`" class="character-cell"
                   :class="{ 'row-first': item.isRowFirst }" :style="cellStyle">
+                  <!-- 顶部拼音，在行首字上显示 -->
                   <template v-if="showPinyin && item.char !== ' ' && item.isRowFirst">
                     <div class="pinyin-area">
                       <small>{{ getPinyin(item.char) }}</small>
                     </div>
                   </template>
 
+                  <!-- 中间汉字 -->
                   <div class="character" :style="getCharacterStyle(item)">
                     {{ item.char }}
                   </div>
 
+                  <!-- 背景网格 -->
                   <div class="grid-background" :class="gridType"></div>
                 </div>
               </div>
             </template>
             <template v-else>
+              <!-- 默认显示空白字帖 -->
               <div class="character-grid" :style="gridContainerStyle">
                 <div v-for="index in defaultGridCount" :key="`empty-${index}`" class="character-cell"
                   :style="cellStyle">
+                  <!-- 背景网格 -->
                   <div class="grid-background" :class="gridType"></div>
                 </div>
               </div>
@@ -49,7 +55,7 @@
 
           <div class="setting-item">
             <div class="setting-label">方格大小</div>
-            <n-slider v-model:value="gridSize" :min="32" :max="80" :step="4" />
+            <n-slider v-model:value="gridSize" :min="32" :max="80" :step="2" />
             <div class="setting-value">{{ gridSize }}px</div>
           </div>
 
@@ -61,6 +67,7 @@
 
           <div class="setting-item">
             <div class="setting-label">练习字数</div>
+            <!-- Dynamically set max based on layout -->
             <n-slider v-model:value="charsPerRow" :min="2" :max="30"/>
             <div class="setting-value">{{ charsPerRow }}个</div>
           </div>
@@ -135,9 +142,11 @@ import {
   getPinyin
 } from '@/utils/sheetUtils'
 
-const defaultGridCount = 50 // 默认网格数量（空白时）  
+// 默认网格数量（空白时）  
+const defaultGridCount = 5 * 10 // 5列10行默认网格  
 
-// 状态管理
+// === 状态管理 ===
+// 存储引用  
 const sheetStore = useSheetStore()
 const settingsStore = useSettingsStore()
 const fontsStore = useFontsStore()
@@ -145,7 +154,10 @@ const previewContainerRef = ref<HTMLElement | null>(null)
 
 // 输入文本  
 const inputText = ref('')
-const characters = computed(() => inputText.value ? Array.from(inputText.value.trim()) : [])
+const characters = computed(() => {
+  if (!inputText.value) return []
+  return Array.from(inputText.value.trim())
+})
 
 // 字帖设置
 const showPinyin = ref(true)
@@ -157,28 +169,54 @@ const fontFamily = ref('楷体, KaiTi, STKaiti, serif')
 const strokeColor = ref('lightgray')
 const strokeOpacity = ref(10)
 const layoutType = ref<LayoutType>('grid')
-const charsPerRow = ref(12) // 每列字符数
+// Initialize based on initial layout
+const charsPerRow = ref(layoutType.value === 'vertical' ? 16 : 12) // 每列字符数
 
 // 监听布局类型变化，设置默认描红字数
 watch(layoutType, (newValue) => {
-  charsPerRow.value = newValue === 'vertical' ? 16 : 12;
+  if (newValue === 'vertical') {
+    charsPerRow.value = 16;
+  } else { // grid
+    charsPerRow.value = 12;
+  }
+}, { immediate: true }); // Run immediately to set initial value correctly
+
+// 监听字体变化
+watch(fontFamily, (newValue) => {
+  // 从fontFamily中提取字体名称
+  const fontFamilies = newValue.split(',').map(name => name.trim());
+
+  // 搜索fontOptions找到匹配的字体选项
+  const fontOption = fontsStore.fontOptions.find(option =>
+    fontFamilies.some(name => option.value.includes(name))
+  );
+
+  // 如果找到匹配的字体选项，尝试加载字体
+  if (fontOption) {
+    console.log(`字体 '${fontOption.label}' 已选择`);
+  }
 }, { immediate: true });
 
-// A4尺寸常量
+// === 计算属性 ===
+// A4 dimensions from constants
 const A4_WIDTH_PX = A4_DIMENSIONS.WIDTH_PX;
 const A4_HEIGHT_PX = A4_DIMENSIONS.HEIGHT_PX;
 
-// 纸张样式
-const paperStyle = computed((): CSSProperties => ({
-  width: `${A4_WIDTH_PX}px`,
-  minHeight: `${A4_HEIGHT_PX}px`,
-  padding: '30px',
-  boxSizing: 'border-box',
-  backgroundColor: 'white',
-  boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)'
-}));
+// Computed style for the paper element - Screen view has smaller padding
+const paperStyle = computed((): CSSProperties => {
+  const screenPadding = '20px'; // Smaller padding for screen display
 
-// 打印边距样式
+  return {
+    width: `${A4_WIDTH_PX}px`,
+    minHeight: `${A4_HEIGHT_PX}px`, // Use min-height to allow content growth
+    padding: screenPadding,
+    boxSizing: 'border-box',
+    backgroundColor: 'white',
+    boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)'
+  };
+});
+
+// CSS variables for print margins
 const printMarginStyles = computed(() => {
   const margins = settingsStore.printSettings.margins;
   return {
@@ -189,40 +227,43 @@ const printMarginStyles = computed(() => {
   };
 });
 
-// 计算分页单元格数据
+// 计算分页单元格数据 - 增加 gridSize 参数传递
 const paginatedCells = computed((): CellData[][] => {
   return paginateCharacters({
     characters: characters.value,
     layoutType: layoutType.value,
     charsPerRow: charsPerRow.value,
-    gridSize: gridSize.value,
+    gridSize: gridSize.value, // 传入当前网格大小
     printSettings: settingsStore.printSettings
   });
 });
 
 // 计算网格容器样式
-const gridContainerStyle = computed(() => 
-  calculateGridContainerStyle({
+const gridContainerStyle = computed(() => {
+  return calculateGridContainerStyle({
     layoutType: layoutType.value,
     gridSize: gridSize.value,
     charsPerRow: charsPerRow.value
-  })
-);
+  });
+});
 
 // 计算单元格样式
-const cellStyle = computed(() => calculateCellStyle(gridSize.value));
+const cellStyle = computed(() => {
+  return calculateCellStyle(gridSize.value);
+});
 
 // 基础字符样式
-const characterStyle = computed(() => 
-  calculateCharacterStyle({
+const characterStyle = computed(() => {
+  return calculateCharacterStyle({
     gridSize: gridSize.value,
     fontSize: fontSize.value,
     fontFamily: fontFamily.value,
     fontColor: 'black',
     layoutType: layoutType.value
-  })
-);
+  });
+});
 
+// === 方法 ===
 // 获取字符样式
 function getCharacterStyle(item: CellData) {
   if (!item.isRowFirst) {
@@ -235,98 +276,92 @@ function getCharacterStyle(item: CellData) {
   return characterStyle.value;
 }
 
-// 打印功能  
+// 导出与打印功能  
 function handlePrint() {
   if (!previewContainerRef.value) return;
 
   printContent({
     title: `汉字练习 - ${inputText.value || '空白字帖'}`,
     content: previewContainerRef.value,
-    callback: () => console.log('打印完成')
+    callback: () => {
+      console.log('打印完成');
+    }
   });
 }
 
-// 导出功能
 function handleExport() {
   if (!previewContainerRef.value) return;
+
   exportAsPDF(`汉字练习 - ${inputText.value || '空白字帖'}`, previewContainerRef.value);
 }
 
-// 从Store加载设置  
+// 加载状态从Store  
 function loadFromStore() {
   const settings = sheetStore.settings;
-  if (!settings) return;
-  
-  gridType.value = settings.gridType || 'tian';
-  gridSize.value = settings.gridSize || DEFAULT_SHEET_SETTINGS.gridSize;
-  fontSize.value = settings.fontSize || DEFAULT_SHEET_SETTINGS.fontSize;
-  strokeColor.value = settings.guideColor || DEFAULT_SHEET_SETTINGS.guideColor;
-  strokeOpacity.value = settings.guideOpacity || DEFAULT_SHEET_SETTINGS.guideOpacity;
-  showPinyin.value = settings.showPinyin !== undefined ? settings.showPinyin : true;
-  showStrokes.value = settings.showGuides !== undefined ? settings.showGuides : true;
-  layoutType.value = settings.layoutType as LayoutType || 'grid';
-  charsPerRow.value = settings.charsPerRow || DEFAULT_SHEET_SETTINGS.charsPerRow;
-  fontFamily.value = settings.fontFamily || DEFAULT_SHEET_SETTINGS.fontFamily;
 
+  // 只有当store中有值时才加载  
+  if (settings) {
+    gridType.value = settings.gridType || 'tian';
+    gridSize.value = settings.gridSize || DEFAULT_SHEET_SETTINGS.gridSize;
+    fontSize.value = settings.fontSize || DEFAULT_SHEET_SETTINGS.fontSize;
+    strokeColor.value = settings.guideColor || DEFAULT_SHEET_SETTINGS.guideColor;
+    strokeOpacity.value = settings.guideOpacity || DEFAULT_SHEET_SETTINGS.guideOpacity;
+    showPinyin.value = settings.showPinyin !== undefined ? settings.showPinyin : true;
+    showStrokes.value = settings.showGuides !== undefined ? settings.showGuides : true;
+    layoutType.value = settings.layoutType as LayoutType || 'grid';
+    charsPerRow.value = settings.charsPerRow || DEFAULT_SHEET_SETTINGS.charsPerRow;
+    fontFamily.value = settings.fontFamily || DEFAULT_SHEET_SETTINGS.fontFamily;
+  }
+
+  // 加载上次输入的文本  
   if (sheetStore.inputText) {
     inputText.value = sheetStore.inputText;
   }
 }
 
-// 保存设置到Store (使用防抖优化)
-let saveSettingsTimeout: number | null = null;
-function saveSettingsToStore() {
-  if (saveSettingsTimeout) clearTimeout(saveSettingsTimeout);
-  
-  saveSettingsTimeout = window.setTimeout(() => {
-    sheetStore.updateSettings({
-      gridType: gridType.value,
-      fontFamily: fontFamily.value,
-      gridSize: gridSize.value,
-      fontSize: fontSize.value,
-      fontColor: 'black',
-      guideColor: strokeColor.value,
-      guideOpacity: strokeOpacity.value,
-      verticalOffset: 0,
-      showPinyin: showPinyin.value,
-      showGuides: showStrokes.value,
-      withTone: true,
-      pinyinFontSize: 40,
-      pinyinColor: '#666666',
-      layoutType: layoutType.value,
-      charsPerRow: charsPerRow.value,
-      isSingleCharMode: true
-    });
-  }, 300);
-}
-
-// 监听设置变更
+// 保存状态到Store  
 watch([
   gridType, gridSize, fontSize, strokeColor,
   strokeOpacity, showPinyin, showStrokes,
   layoutType, charsPerRow, fontFamily
-], saveSettingsToStore);
+], () => {
+  sheetStore.updateSettings({
+    gridType: gridType.value,
+    fontFamily: fontFamily.value,
+    gridSize: gridSize.value,
+    fontSize: fontSize.value,
+    fontColor: 'black',
+    guideColor: strokeColor.value,
+    guideOpacity: strokeOpacity.value,
+    verticalOffset: 0,
+    showPinyin: showPinyin.value,
+    showGuides: showStrokes.value,
+    withTone: true,
+    pinyinFontSize: 40,
+    pinyinColor: '#666666',
+    layoutType: layoutType.value,
+    charsPerRow: charsPerRow.value,
+    isSingleCharMode: true
+  });
+});
 
-// 保存输入文本 (使用防抖优化)
-let saveTextTimeout: number | null = null;
+// 保存输入文本  
 watch(inputText, (newText) => {
-  if (!newText) return;
-  
-  if (saveTextTimeout) clearTimeout(saveTextTimeout);
-  
-  saveTextTimeout = window.setTimeout(() => {
+  if (newText) {
     sheetStore.setInputText(newText);
-  }, 500);
+  }
 });
 
 // 初始化  
 onMounted(() => {
   loadFromStore();
+  // 预加载常用汉字拼音
   PinyinService.preloadCommonCharacters(COMMON_CHARACTERS);
 });
 </script>
 
 <style scoped>
+/* 页面整体布局 */
 .sheet-page {
   min-height: 100vh;
   display: flex;
@@ -344,16 +379,18 @@ onMounted(() => {
   width: 100%;
 }
 
+/* 预览区域 */
 .sheet-preview {
   flex: 1;
   background-color: #eef1f5;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
+  /* Stack pages vertically */
   align-items: center;
+  /* Center pages horizontally */
   overflow: auto;
   gap: 20px;
-  will-change: transform;
 }
 
 .page {
@@ -370,22 +407,25 @@ onMounted(() => {
 
 .character-grid {
   width: 100%;
-  contain: layout;
 }
 
+/* 字符单元格 */
 .character-cell {
   position: relative;
-  contain: content;
 }
 
+/* 行首字样式 */
 .row-first {
   font-weight: 500;
+  /* 加粗 */
   color: #000;
+  /* 强制黑色 */
 }
 
 .pinyin-area {
   position: absolute;
   top: -22px;
+  /* 拼音区域上移 */
   left: 0;
   width: 100%;
   text-align: center;
@@ -401,7 +441,6 @@ onMounted(() => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  will-change: transform;
 }
 
 .grid-background {
@@ -413,6 +452,7 @@ onMounted(() => {
   z-index: 0;
 }
 
+/* 控制面板样式 */
 .control-panel {
   width: 300px;
   background-color: white;
@@ -489,19 +529,25 @@ onMounted(() => {
   color: #999;
 }
 
+/* 打印样式 */
 @media print {
   @page {
     margin: 0;
+    /* Remove browser default margins */
     size: A4;
+    /* Explicitly set paper size for print */
   }
 
   body {
     margin: 0;
+    /* Ensure body has no margin */
     background-color: white !important;
+    /* Ensure white background */
   }
 
   .sheet-page {
     min-height: unset;
+    /* Allow page to shrink if needed */
   }
 
   .app-header,
@@ -513,30 +559,43 @@ onMounted(() => {
   .sheet-content {
     padding: 0;
     display: block;
+    /* Override flex for print */
     max-width: none;
+    /* Remove max-width */
     margin: 0;
   }
 
   .sheet-preview {
     overflow: visible;
     background-color: transparent;
+    /* Remove background for print */
     padding: 0;
     display: block;
+    /* Reset flex layout for print */
     gap: 0;
     border-radius: 0;
     height: 100vh;
+    /* Try setting preview height */
   }
 
   .page {
     page-break-after: always;
+    /* Ensure page breaks between .page elements */
     width: 100%;
+    /* Ensure page takes full width */
     height: 100%;
+    /* Ensure page takes full height */
     display: flex;
+    /* Use flex to center paper */
     justify-content: center;
     align-items: flex-start;
+    /* Align paper to top */
     overflow: hidden;
+    /* Prevent content spill */
     background-color: transparent;
+    /* Ensure no background interfere */
     margin-bottom: 0;
+    /* Remove margin in print view */
   }
 
   .paper {
@@ -557,10 +616,12 @@ onMounted(() => {
     box-sizing: border-box;
   }
 
+  /* Force printing background graphics for grid */
   .character-cell,
   .grid-background {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+    /* For older Safari/Chrome */
   }
 }
 </style>
